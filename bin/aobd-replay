@@ -108,8 +108,8 @@ with open(args.script) as data:
             assert k1 == 'sending' and k2 == 'received', (k1, k2)
             print('expecting:', repr(s1), 'sending back:', repr(s2))
             data = port.read(len(s1))
-            print('GOT', repr(data))
             assert data == s1, repr(data)
+
             port.write(s2)
             time.sleep(args.prompt_sleep)
             port.write(b'>')
