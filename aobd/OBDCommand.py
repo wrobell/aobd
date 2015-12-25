@@ -22,6 +22,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import binascii
 import re
 from .utils import *
 
@@ -61,19 +62,13 @@ class OBDCommand():
         
         # combine the bytes back into a hex string
         # TODO: rewrite decoders to handle raw byte arrays
-        _data = ""
-
-        for b in message.data_bytes:
-            h = hex(b)[2:].upper()
-            h = "0" + h if len(h) < 2 else h
-            _data += h
-
-        # constrain number of bytes in response
-        if (self.bytes > 0): # zero bytes means flexible response
-            _data = constrainHex(_data, self.bytes)
+        data = message.data_bytes
+        if self.bytes: # zero bytes means flexible response
+            data = data[:self.bytes]
+        data = binascii.hexlify(data).decode().upper()
 
         # decoded value into the response object
-        d = self.decode(_data)
+        d = self.decode(data)
         r.value = d[0]
         r.unit  = d[1]
 
