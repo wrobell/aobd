@@ -68,11 +68,6 @@ if args.log:
     elm327_log.addHandler(handler)
 
 
-def rpm(v):
-    v = v / 4.0
-    return (v, aobd.Unit.RPM)
-
-
 async def reader(dev, interval):
     cmd = aobd.commands.RPM
     await dev.connect()
