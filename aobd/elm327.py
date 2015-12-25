@@ -157,6 +157,7 @@ class ELM327:
         # suppress any "automatic" prefix
         p = p[1:] if (len(p) > 1 and p.startswith("A")) else p[:-1]
 
+        logger.info('protocol id: {}'.format(p))
         if p not in self._SUPPORTED_PROTOCOLS:
             raise OBDError("ELM responded with unknown protocol")
 
@@ -384,6 +385,9 @@ class ELM327:
         self.__write(cmd)
 
         data = await self._read_until(b'>')
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('received: {}'.format(bytes(data)))
+
         data = clean_data(data)
         data = split_data(data)
 
