@@ -52,6 +52,7 @@ import logging
 import platform
 import serial
 import re
+import time
 
 import aobd
 from aobd.elm327 import ELM327
@@ -74,6 +75,10 @@ parser.add_argument(
 parser.add_argument(
     '-i', '--interval', dest='interval', default=1, type=float,
         help='read interval'
+)
+parser.add_argument(
+    '-p', '--prompt-sleep', dest='prompt_sleep', default=0, type=float,
+        help='how long to sleep before sending prompt (default is 0)'
 )
 parser.add_argument
 parser.add_argument('device', help='serial device')
@@ -106,6 +111,8 @@ with open(args.script) as data:
             print('GOT', repr(data))
             assert data == s1, repr(data)
             port.write(s2)
+            time.sleep(args.prompt_sleep)
+            port.write(b'>')
     finally:
         port.close()
 
