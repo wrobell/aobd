@@ -29,11 +29,13 @@
 #                                                                      #
 ########################################################################
 
+import logging
 import time
 import threading
 from .utils import Response
-from .debug import debug
 from . import OBD
+
+logger = logging.getLogger(__name__)
 
 class Async(OBD):
     """
@@ -58,15 +60,15 @@ class Async(OBD):
     def start(self):
         """ Starts the async update loop """
         if not self.is_connected():
-            debug("Async thread not started because no connection was made")
+            logger.debug("Async thread not started because no connection was made")
             return
 
         if len(self.__commands) == 0:
-            debug("Async thread not started because no commands were registered")
+            logger.debug("Async thread not started because no commands were registered")
             return
 
         if self.__thread is None:
-            debug("Starting async thread")
+            logger.debug("Starting async thread")
             self.__running = True
             self.__thread = threading.Thread(target=self.run)
             self.__thread.daemon = True
@@ -76,11 +78,11 @@ class Async(OBD):
     def stop(self):
         """ Stops the async update loop """
         if self.__thread is not None:
-            debug("Stopping async thread...")
+            logger.debug("Stopping async thread...")
             self.__running = False
             self.__thread.join()
             self.__thread = None
-            debug("Async thread stopped")
+            logger.debug("Async thread stopped")
 
 
     def paused(self):
@@ -130,22 +132,22 @@ class Async(OBD):
 
         # the dict shouldn't be changed while the daemon thread is iterating
         if self.__running:
-            debug("Can't watch() while running, please use stop()", True)
+            logger.debug("Can't watch() while running, please use stop()", True)
         else:
 
             if not (self.supports(c) or force):
-                debug("'%s' is not supported" % str(c), True)
+                logger.debug("'%s' is not supported" % str(c), True)
                 return
 
             # new command being watched, store the command
             if c not in self.__commands:
-                debug("Watching command: %s" % str(c))
+                logger.debug("Watching command: %s" % str(c))
                 self.__commands[c] = Response() # give it an initial value
                 self.__callbacks[c] = [] # create an empty list
 
             # if a callback was given, push it
             if hasattr(callback, "__call__") and (callback not in self.__callbacks[c]):
-                debug("subscribing callback for command: %s" % str(c))
+                logger.debug("subscribing callback for command: %s" % str(c))
                 self.__callbacks[c].append(callback)
 
 
@@ -158,9 +160,9 @@ class Async(OBD):
 
         # the dict shouldn't be changed while the daemon thread is iterating
         if self.__running:
-            debug("Can't unwatch() while running, please use stop()", True)
+            logger.debug("Can't unwatch() while running, please use stop()", True)
         else:
-            debug("Unwatching command: %s" % str(c))
+            logger.debug("Unwatching command: %s" % str(c))
 
             if c in self.__commands:
                 # if a callback was specified, only remove the callback
@@ -181,9 +183,9 @@ class Async(OBD):
 
         # the dict shouldn't be changed while the daemon thread is iterating
         if self.__running:
-            debug("Can't unwatch_all() while running, please use stop()", True)
+            logger.debug("Can't unwatch_all() while running, please use stop()", True)
         else:
-            debug("Unwatching all")
+            logger.debug("Unwatching all")
             self.__commands  = {}
             self.__callbacks = {}
 

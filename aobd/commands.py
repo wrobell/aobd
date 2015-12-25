@@ -29,10 +29,12 @@
 #                                                                      #
 ########################################################################
 
+import logging
+
 from .OBDCommand import OBDCommand
 from .decoders import *
-from .debug import debug
 
+logger = logging.getLogger(__name__)
 
 
 
@@ -214,7 +216,7 @@ class Commands():
         elif isinstance(key, str) or isinstance(key, unicode):
             return self.__dict__[key]
         else:
-            debug("OBD commands can only be retrieved by PID value or dict name", True)
+            logger.debug("OBD commands can only be retrieved by PID value or dict name", True)
 
 
     def __len__(self):
@@ -246,7 +248,7 @@ class Commands():
             if self.has(mode, pid):
                 self.modes[mode][pid].supported = v
         else:
-            debug("set_supported() only accepts boolean values", True)
+            logger.debug("set_supported() only accepts boolean values", True)
 
 
     def has_command(self, c):
@@ -254,7 +256,7 @@ class Commands():
         if isinstance(c, OBDCommand):
             return c in self.__dict__.values()
         else:
-            debug("has_command() only accepts OBDCommand objects", True)
+            logger.debug("has_command() only accepts OBDCommand objects", True)
             return False
 
 
@@ -263,7 +265,7 @@ class Commands():
         if isinstance(s, str) or isinstance(s, unicode):
             return s.isupper() and (s in self.__dict__.keys())
         else:
-            debug("has_name() only accepts string names for commands", True)
+            logger.debug("has_name() only accepts string names for commands", True)
             return False
 
 
@@ -278,7 +280,7 @@ class Commands():
                 return False
             return True
         else:
-            debug("has_pid() only accepts integer values for mode and PID", True)
+            logger.debug("has_pid() only accepts integer values for mode and PID", True)
             return False
 
 

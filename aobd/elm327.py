@@ -29,13 +29,15 @@
 #                                                                      #
 ########################################################################
 
+import logging
 import re
 import serial
 import time
 from .protocols import *
 from .utils import numBitsSet
-from .debug import debug
 
+
+logger = logging.getLogger(__name__)
 
 
 class ELM327:
@@ -76,7 +78,7 @@ class ELM327:
 
         # ------------- open port -------------
 
-        debug("Opening serial port '%s'" % portname)
+        logger.debug("Opening serial port '%s'" % portname)
 
         try:
             self.__port = serial.Serial(portname, \
@@ -93,7 +95,7 @@ class ELM327:
             self.__error(e)
             return
 
-        debug("Serial port successfully opened on " + self.get_port_name())
+        logger.debug("Serial port successfully opened on " + self.get_port_name())
 
 
         # ---------------------------- ATZ (reset) ----------------------------
@@ -168,7 +170,7 @@ class ELM327:
             return
 
         # ------------------------------- done -------------------------------
-        debug("Connection successful")
+        logger.debug("Connection successful")
         self.__connected = True
 
 
@@ -217,10 +219,10 @@ class ELM327:
     def __error(self, msg=None):
         """ handles fatal failures, print debug info and closes serial """
         
-        debug("Connection Error:", True)
+        logger.debug("Connection Error:", True)
 
         if msg is not None:
-            debug('    ' + str(msg), True)
+            logger.debug('    ' + str(msg), True)
 
         if self.__port is not None:
             self.__port.close()
@@ -263,11 +265,11 @@ class ELM327:
         """
 
         if not self.is_connected():
-            debug("cannot send_and_parse() when unconnected", True)
+            logger.debug("cannot send_and_parse() when unconnected", True)
             return None
 
         if "AT" in cmd.upper():
-            debug("Rejected sending AT command", True)
+            logger.debug("Rejected sending AT command", True)
             return None
 
         lines = self.__send(cmd, delay)
@@ -295,7 +297,7 @@ class ELM327:
         self.__write(cmd)
 
         if delay is not None:
-            debug("wait: %d seconds" % delay)
+            logger.debug("wait: %d seconds" % delay)
             time.sleep(delay)
 
         return self.__read()
@@ -311,9 +313,9 @@ class ELM327:
             self.__port.flushInput() # dump everything in the input buffer
             self.__port.write(cmd.encode()) # turn the string into bytes and write
             self.__port.flush() # wait for the output buffer to finish transmitting
-            debug("write: " + repr(cmd))
+            logger.debug("write: " + repr(cmd))
         else:
-            debug("cannot perform __write() when unconnected", True)
+            logger.debug("cannot perform __write() when unconnected", True)
 
 
     def __read(self):
@@ -335,10 +337,10 @@ class ELM327:
                 if not c:
 
                     if attempts <= 0:
-                        debug("__read() never recieved prompt character")
+                        logger.debug("__read() never recieved prompt character")
                         break
 
-                    debug("__read() found nothing")
+                    logger.debug("__read() found nothing")
                     attempts -= 1
                     continue
 
@@ -352,10 +354,10 @@ class ELM327:
 
                 buffer += c # whatever is left must be part of the response
         else:
-            debug("cannot perform __read() when unconnected", True)
+            logger.debug("cannot perform __read() when unconnected", True)
             return ""
 
-        debug("read: " + repr(buffer))
+        logger.debug("read: " + repr(buffer))
 
         # convert bytes into a standard string
         raw = buffer.decode()

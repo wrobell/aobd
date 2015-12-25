@@ -31,7 +31,6 @@
 
 import re
 from .utils import *
-from .debug import debug
 
 
 class OBDCommand():

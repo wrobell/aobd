@@ -29,14 +29,16 @@
 #                                                                      #
 ########################################################################
 
+import logging
 import time
 
 from .__version__ import __version__
 from .elm327 import ELM327
 from .commands import commands
 from .utils import scanSerial, Response
-from .debug import debug
 
+
+logger = logging.getLogger(__name__)
 
 
 class OBD(object):
@@ -48,9 +50,9 @@ class OBD(object):
         self.port = None
         self.supported_commands = []
 
-        debug("========================== python-OBD (v%s) ==========================" % __version__)
+        logger.debug("========================== python-OBD (v%s) ==========================" % __version__)
         self.__connect(portstr, baudrate) # initialize by connecting and loading sensors
-        debug("=========================================================================")
+        logger.debug("=========================================================================")
 
 
     def __connect(self, portstr, baudrate):
@@ -60,32 +62,32 @@ class OBD(object):
         """
 
         if portstr is None:
-            debug("Using scanSerial to select port")
+            logger.debug("Using scanSerial to select port")
             portnames = scanSerial()
-            debug("Available ports: " + str(portnames))
+            logger.debug("Available ports: " + str(portnames))
 
             for port in portnames:
-                debug("Attempting to use port: " + str(port))
+                logger.debug("Attempting to use port: " + str(port))
                 self.port = ELM327(port, baudrate)
 
                 if self.port.is_connected():
                     # success! stop searching for serial
                     break
         else:
-            debug("Explicit port defined")
+            logger.debug("Explicit port defined")
             self.port = ELM327(portstr, baudrate)
 
         # if a connection was made, query for commands
         if self.is_connected():
             self.__load_commands()
         else:
-            debug("Failed to connect")
+            logger.debug("Failed to connect")
 
 
     def close(self):
         """ Closes the connection """
         if self.is_connected():
-            debug("Closing connection")
+            logger.debug("Closing connection")
             self.port.close()
             self.port = None
             self.supported_commands = []
@@ -110,7 +112,7 @@ class OBD(object):
             and compiles a list of command objects.
         """
 
-        debug("querying for supported PIDs (commands)...")
+        logger.debug("querying for supported PIDs (commands)...")
 
         self.supported_commands = []
 
@@ -144,7 +146,7 @@ class OBD(object):
                         if c not in pid_getters:
                             self.supported_commands.append(c)
 
-        debug("finished querying with %d commands supported" % len(self.supported_commands))
+        logger.debug("finished querying with %d commands supported" % len(self.supported_commands))
 
 
     def print_commands(self):
@@ -168,10 +170,10 @@ class OBD(object):
         """
 
         if not self.is_connected():
-            debug("Query failed, no connection available", True)
+            logger.debug("Query failed, no connection available", True)
             return Response() # return empty response
 
-        debug("Sending command: %s" % str(c))
+        logger.debug("Sending command: %s" % str(c))
 
         # send command and retrieve message
         m = self.port.send_and_parse(c.get_command())
@@ -192,5 +194,5 @@ class OBD(object):
         if self.supports(c) or force:
             return self.__send(c)
         else:
-            debug("'%s' is not supported" % str(c), True)
+            logger.debug("'%s' is not supported" % str(c), True)
             return Response() # return empty response

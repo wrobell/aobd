@@ -31,11 +31,14 @@
 
 import serial
 import errno
+import logging
 import string
 import time
 import glob
 import sys
-from .debug import debug
+
+
+logger = logging.getLogger(__name__)
 
 
 class Unit:
@@ -144,10 +147,10 @@ def constrainHex(_hex, b):
     diff = (b * 2) - len(_hex) # length discrepency in number of hex digits
 
     if diff > 0:
-        debug("Receieved less data than expected, trying to parse anyways...")
+        logger.debug("Receieved less data than expected, trying to parse anyways...")
         _hex += ('0' * diff) # pad the right side with zeros
     elif diff < 0:
-        debug("Receieved more data than expected, trying to parse anyways...")
+        logger.debug("Receieved more data than expected, trying to parse anyways...")
         _hex = _hex[:diff] # chop off the right side to fit
 
     return _hex

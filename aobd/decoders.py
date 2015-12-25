@@ -29,10 +29,10 @@
 #                                                                      #
 ########################################################################
 
+import logging
 import math
 from .utils import *
 from .codes import *
-from .debug import debug
 
 '''
 All decoders take the form:
@@ -42,6 +42,8 @@ def <name>(_hex):
     return (<value>, <unit>)
 
 '''
+
+logger = logging.getLogger(__name__)
 
 
 # todo
@@ -265,19 +267,19 @@ def fuel_status(_hex):
     v = unhex(_hex[0:2]) # todo, support second fuel system
 
     if v <= 0:
-        debug("Invalid fuel status response (v <= 0)", True)
+        logger.debug("Invalid fuel status response (v <= 0)", True)
         return (None, Unit.NONE)
 
     i = math.log(v, 2) # only a single bit should be on
 
     if i % 1 != 0:
-        debug("Invalid fuel status response (multiple bits set)", True)
+        logger.debug("Invalid fuel status response (multiple bits set)", True)
         return (None, Unit.NONE)
 
     i = int(i)
 
     if i >= len(FUEL_STATUS):
-        debug("Invalid fuel status response (no table entry)", True)
+        logger.debug("Invalid fuel status response (no table entry)", True)
         return (None, Unit.NONE)
 
     return (FUEL_STATUS[i], Unit.NONE)
@@ -287,19 +289,19 @@ def air_status(_hex):
     v = unhex(_hex)
 
     if v <= 0:
-        debug("Invalid air status response (v <= 0)", True)
+        logger.debug("Invalid air status response (v <= 0)", True)
         return (None, Unit.NONE)
 
     i = math.log(v, 2) # only a single bit should be on
 
     if i % 1 != 0:
-        debug("Invalid air status response (multiple bits set)", True)
+        logger.debug("Invalid air status response (multiple bits set)", True)
         return (None, Unit.NONE)
 
     i = int(i)
 
     if i >= len(AIR_STATUS):
-        debug("Invalid air status response (no table entry)", True)
+        logger.debug("Invalid air status response (no table entry)", True)
         return (None, Unit.NONE)
 
     return (AIR_STATUS[i], Unit.NONE)

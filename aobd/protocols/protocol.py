@@ -30,7 +30,6 @@
 ########################################################################
 
 from aobd.utils import ascii_to_bytes, isHex
-from aobd.debug import debug
 
 
 """
