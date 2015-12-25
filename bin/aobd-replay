@@ -54,14 +54,8 @@ import serial
 import re
 import time
 
-import aobd
-from aobd.elm327 import ELM327
-from aobd.utils import unhex
 
 RE_LINE = re.compile(r':(received|sending): b\'(.+)\'$')
-
-
-logger = logging.getLogger('aobd')
 
 fmt = '{}:%(asctime)s:%(levelname)s:%(name)s:%(thread)s:%(message)s' \
     .format(platform.node())
