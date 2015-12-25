@@ -17,7 +17,7 @@ The goals
 - improved error handling
 
 Required Python 3.5 or later and `pySerial <https://pythonhosted.org/pyserial/>`_
-library
+library.
 
 
 Installation
@@ -83,8 +83,6 @@ Here are a handful of the supported commands (sensors). For a full list, see [th
 License
 -------
 
-GNU GPL v2
-
-This library is forked from:
+GNU GPL v3.
 
 Enjoy and drive safe!
