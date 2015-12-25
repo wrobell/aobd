@@ -52,7 +52,7 @@ parser.add_argument(
 )
 parser.add_argument('device', help='serial device')
 parser.add_argument(
-    'command', nargs='?', default='RPM',
+    'commands', nargs='*', default=['RPM'],
     help='diagnostic command to read'
 )
 args = parser.parse_args()
@@ -71,19 +71,20 @@ if args.log:
     elm327_log.addHandler(handler)
 
 
-async def reader(dev, cmd, interval):
+async def reader(dev, commands, interval):
     await dev.connect()
     while True:
-        v = await dev.query(cmd, force=True)
-        print('{} {}'.format(v.value, v.unit))
+        for cmd in commands:
+            v = await dev.query(cmd, force=True)
+            print('{} {}'.format(v.value, v.unit))
         await asyncio.sleep(interval)
 
 
-cmd = getattr(aobd.commands, args.command.upper())
+commands = [getattr(aobd.commands, c.upper()) for c in args.commands]
 loop = asyncio.get_event_loop()
 dev = aobd.OBD(args.device)
 try:
-    task = reader(dev, cmd, args.interval)
+    task = reader(dev, commands, args.interval)
     loop.run_until_complete(task)
 finally:
     dev.close()
