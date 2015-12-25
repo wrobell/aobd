@@ -276,20 +276,6 @@ class ELM327:
         return None # no suitable response was returned
 
 
-###   def __send(self, cmd, delay=None):
-###       """
-###           unprotected send() function
-###
-###           will __write() the given string, no questions asked.
-###           returns result of __read() after an optional delay.
-###       """
-###       self.__write(cmd)
-###       if delay is not None:
-###           time.sleep(delay)
-###       data = self.__read()
-###       return data
-
-
     def __send(self, cmd, delay=None):
         data = self._loop.run_until_complete(self._send(cmd))
         return data
@@ -310,57 +296,6 @@ class ELM327:
             self.__port.flush() # wait for the output buffer to finish transmitting
         else:
             raise OBDError('Device not connected')
-
-
-    def __read(self):
-        """
-            "low-level" read function
-
-            accumulates characters until the prompt character is seen
-            returns a list of [/r/n] delimited strings
-        """
-
-        attempts = 2
-        buffer = b''
-
-        if self.__port:
-            while True:
-                c = self.__port.read(1)
-
-                # if nothing was recieved
-                if not c:
-
-                    if attempts <= 0:
-                        logger.debug("__read() never recieved prompt character")
-                        break
-
-                    logger.debug("__read() found nothing")
-                    attempts -= 1
-                    continue
-
-                # end on chevron (ELM prompt character)
-                if c == b'>':
-                    break
-
-                # skip null characters (ELM spec page 9)
-                if c == b'\x00':
-                    continue
-
-                buffer += c # whatever is left must be part of the response
-        else:
-            raise OBDError('Device not connected')
-
-        logger.debug('received: ' + repr(buffer))
-
-        # convert bytes into a standard string
-        raw = buffer.decode()
-
-        # splits into lines
-        # removes empty lines
-        # removes trailing spaces
-        lines = [ s.strip() for s in re.split("[\r\n]", raw) if bool(s) ]
-
-        return lines
 
 
     def _read_data(self):
