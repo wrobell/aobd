@@ -24,12 +24,20 @@
 #
 
 import argparse
+import logging
+import platform
 import time
 import struct
 
 import aobd
 from aobd.elm327 import ELM327
 from aobd.utils import unhex
+
+logger = logging.getLogger('aobd')
+
+fmt = '{}:%(asctime)s:%(levelname)s:%(name)s:%(thread)s:%(message)s' \
+    .format(platform.node())
+logging.basicConfig(format=fmt)
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -43,6 +51,9 @@ parser.add_argument(
 parser.add_argument
 parser.add_argument('device', help='serial device')
 args = parser.parse_args()
+
+if args.verbose:
+    logger.setLevel(logging.DEBUG)
 
 def rpm(v):
     v = v / 4.0
