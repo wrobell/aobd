@@ -77,7 +77,7 @@ def rpm(v):
 async def reader(elm, interval):
     await elm.connect()
     while True:
-        v = await elm.send_and_parse('010C')
+        v = await elm.query('010C')
         v = struct.unpack('>H', bytes(v.data_bytes))
         print(rpm(v[0]))
         await asyncio.sleep(interval)

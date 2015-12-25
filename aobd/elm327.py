@@ -232,7 +232,7 @@ class ELM327:
         logger.debug('connection closed')
 
 
-    async def send_and_parse(self, cmd):
+    async def query(self, cmd):
         """
             send() function used to service all OBDCommands
 
