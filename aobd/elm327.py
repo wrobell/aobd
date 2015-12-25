@@ -105,36 +105,36 @@ class ELM327:
 
     async def connect(self):
         # ---------------------------- ATZ (reset) ----------------------------
-        await self._send("ATZ") # wait 1 second for ELM to initialize
+        await self._send(b'ATZ') # wait 1 second for ELM to initialize
         # return data can be junk, so don't bother checking
 
         # -------------------------- ATE0 (echo OFF) --------------------------
-        r = await self._send("ATE0")
+        r = await self._send(b'ATE0')
         if not self.__isok(r, expectEcho=True):
             raise OBDError("ATE0 did not return 'OK'")
 
         # ------------------------- ATH1 (headers ON) -------------------------
-        r = await self._send("ATH1")
+        r = await self._send(b'ATH1')
         if not self.__isok(r):
             raise OBDError("ATH1 did not return 'OK', or echoing is still ON")
 
         # ------------------------ ATL0 (linefeeds OFF) -----------------------
-        r = await self._send("ATL0")
+        r = await self._send(b'ATL0')
         if not self.__isok(r):
             raise OBDError("ATL0 did not return 'OK'")
 
         # ---------------------- ATSPA8 (protocol AUTO) -----------------------
-        r = await self._send("ATSPA8")
+        r = await self._send(b'ATSPA8')
         if not self.__isok(r):
             raise OBDError("ATSPA8 did not return 'OK'")
 
         # -------------- 0100 (first command, SEARCH protocols) --------------
         # TODO: rewrite this using a "wait for prompt character"
         # rather than a fixed wait period
-        r0100 = await self._send("0100")
+        r0100 = await self._send(b'0100')
 
         # ------------------- ATDPN (list protocol number) -------------------
-        r = await self._send("ATDPN")
+        r = await self._send(b'ATDPN')
 
         if not r:
             raise OBDError("Describe protocol command didn't return ")
@@ -246,7 +246,7 @@ class ELM327:
         if not self.is_connected():
             raise OBDError('Device not connected')
 
-        if "AT" in cmd.upper():
+        if b'AT' in cmd.upper():
             raise OBDError('AT command not allowed')
 
         lines = await self._send(cmd)
@@ -268,10 +268,9 @@ class ELM327:
             "low-level" function to write a string to the port
         """
         if self.__port:
-            cmd += "\r\n" # terminate
+            cmd += b'\r\n' # terminate
             self.__port.flushInput() # dump everything in the input buffer
 
-            cmd = cmd.encode()
             logger.debug('sending: ' + repr(cmd))
 
             self.__port.write(cmd) # turn the string into bytes and write
