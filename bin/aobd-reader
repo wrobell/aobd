@@ -83,5 +83,5 @@ try:
         time.sleep(args.interval)
 finally:
     elm.close()
-    
+   
 # vim: sw=4:et:ai

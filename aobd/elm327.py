@@ -80,12 +80,13 @@ class ELM327:
 
         logger.debug("Opening serial port '%s'" % portname)
 
-        self.__port = serial.Serial(portname,
-                baudrate=baudrate,
-                parity=serial.PARITY_NONE,
-                stopbits=1,
-                bytesize=8,
-                timeout=3,
+        self.__port = serial.Serial(
+            portname,
+            baudrate=baudrate,
+            parity=serial.PARITY_NONE,
+            stopbits=1,
+            bytesize=8,
+            timeout=3,
         )
 
         logger.debug("Serial port successfully opened on " + self.get_port_name())
