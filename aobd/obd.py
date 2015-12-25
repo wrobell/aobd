@@ -77,11 +77,10 @@ class OBD(object):
             logger.debug("Explicit port defined")
             self.port = ELM327(portstr, baudrate)
 
-        # if a connection was made, query for commands
-        if self.is_connected():
-            self.__load_commands()
-        else:
-            logger.debug("Failed to connect")
+
+    async def connect(self):
+        await self.port.connect()
+        #await self.__load_commands()
 
 
     def close(self):
@@ -106,7 +105,7 @@ class OBD(object):
             return "Not connected to any port"
 
 
-    def __load_commands(self):
+    async def __load_commands(self):
         """
             Queries for available PIDs, sets their support status,
             and compiles a list of command objects.
@@ -124,7 +123,7 @@ class OBD(object):
             if not self.supports(get):
                 continue
 
-            response = self.__send(get) # ask nicely
+            response = await self.__send(get) # ask nicely
 
             if response.is_null():
                 continue
@@ -163,7 +162,7 @@ class OBD(object):
         return commands.has_command(c) and c.supported
 
 
-    def __send(self, c):
+    async def __send(self, c):
         """
             Back-end implementation of query()
             sends the given command, retrieves and parses the response
@@ -176,7 +175,7 @@ class OBD(object):
         logger.debug("Sending command: %s" % str(c))
 
         # send command and retrieve message
-        m = self.port.send_and_parse(c.get_command())
+        m = await self.port.query(c.get_command())
 
         if m is None:
             return Response() # return empty response
@@ -184,7 +183,7 @@ class OBD(object):
             return c(m) # compute a response object
 
 
-    def query(self, c, force=False):
+    async def query(self, c, force=False):
         """
             primary API function. Sends commands to the car, and
             protects against sending unsupported commands.
@@ -192,7 +191,8 @@ class OBD(object):
 
         # check that the command is supported
         if self.supports(c) or force:
-            return self.__send(c)
+            r = await self.__send(c)
+            return r
         else:
             logger.debug("'%s' is not supported" % str(c), True)
             return Response() # return empty response

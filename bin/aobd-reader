@@ -30,7 +30,6 @@ import platform
 import struct
 
 import aobd
-from aobd.elm327 import ELM327
 
 logger = logging.getLogger('aobd')
 
@@ -74,20 +73,20 @@ def rpm(v):
     return (v, aobd.Unit.RPM)
 
 
-async def reader(elm, interval):
-    await elm.connect()
+async def reader(dev, interval):
+    cmd = aobd.commands.RPM
+    await dev.connect()
     while True:
-        v = await elm.query(b'010C')
-        v = struct.unpack('>H', bytes(v.data_bytes))
-        print(rpm(v[0]))
+        v = await dev.query(cmd, force=True)
+        print(v.value)
         await asyncio.sleep(interval)
 
 loop = asyncio.get_event_loop()
-elm = ELM327(args.device, baudrate=38400)
+dev = aobd.OBD(args.device)
 try:
-    task = reader(elm, args.interval)
+    task = reader(dev, args.interval)
     loop.run_until_complete(task)
 finally:
-    elm.close()
+    dev.close()
    
 # vim: sw=4:et:ai
