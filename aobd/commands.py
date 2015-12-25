@@ -31,7 +31,7 @@
 
 import logging
 
-from .OBDCommand import OBDCommand
+from .obdcmd import OBDCommand
 from .decoders import *
 
 logger = logging.getLogger(__name__)

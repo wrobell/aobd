@@ -38,7 +38,7 @@
 
 from .__version__ import __version__
 from .obd import OBD
-from .OBDCommand import OBDCommand
+from .obdcmd import OBDCommand
 from .commands import commands
 from .utils import scanSerial, Unit
 from .async import Async
