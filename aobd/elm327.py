@@ -281,9 +281,10 @@ class ELM327:
             cmd += "\r\n" # terminate
             self.__port.flushInput() # dump everything in the input buffer
 
+            cmd = cmd.encode()
             logger.debug('sending: ' + repr(cmd))
 
-            self.__port.write(cmd.encode()) # turn the string into bytes and write
+            self.__port.write(cmd) # turn the string into bytes and write
             self.__port.flush() # wait for the output buffer to finish transmitting
         else:
             raise OBDError('Device not connected')
