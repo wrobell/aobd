@@ -31,16 +31,22 @@ Basic Usage
 -----------
 
 ```Python
-import obd
 
-connection = obd.OBD() # auto-connects to USB or RF port
+import asyncio
+import aobd
 
-cmd = obd.commands.RPM # select an OBD command (sensor)
+async def reader(dev):
+    cmd = aobd.commands.RPM # select an OBD command (sensor)
 
-response = connection.query(cmd) # send the command, and parse the response
+    await dev.connect()             # connect to OBD-II device
+    response = await dev.query(cmd) # send the command and parse the response
 
-print(response.value)
-print(response.unit)
+    print(response.value)
+    print(response.unit)
+
+loop = asyncio.get_event_loop()
+dev = aobd.OBD('/dev/rfcomm0')
+loop.run_until_complete(reader(dev))
 ```
 
 Documentation
