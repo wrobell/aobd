@@ -31,7 +31,6 @@ import struct
 
 import aobd
 from aobd.elm327 import ELM327
-from aobd.utils import unhex
 
 logger = logging.getLogger('aobd')
 
