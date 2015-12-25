@@ -1,15 +1,30 @@
-python-OBD
-==========
+Python library for handling realtime sensor data from OBD-II vehicle
+ports.
 
-A python module for handling realtime sensor data from OBD-II vehicle
-ports. Works with ELM327 OBD-II adapters, and is fit for the Raspberry
-Pi.
+The code is fork of
+
+-   <https://github.com/brendan-w/python-OBD>
+-   <https://github.com/peterh/pyobd>
+-   <https://github.com/Pbartek/pyobd-pi>
+
+The goals
+
+- use bytes only for command handling
+- asyncio based API
+- speed up serial port communication by getting all data at once instead of
+  single byte reads
+- multi-command communication
+- improved error handling
+
+Required Python 3.5 or later and `pySerial <https://pythonhosted.org/pyserial/>`_
+library
+
 
 Installation
 ------------
 
 ```Shell
-$ pip install obd
+$ pip install aobd
 ```
 
 Basic Usage
@@ -30,8 +45,6 @@ print(response.unit)
 
 Documentation
 -------------
-
-Available at [python-obd.readthedocs.org](http://python-obd.readthedocs.org/en/latest/)
 
 Commands
 --------
@@ -67,8 +80,5 @@ License
 GNU GPL v2
 
 This library is forked from:
-
--   <https://github.com/peterh/pyobd>
--   <https://github.com/Pbartek/pyobd-pi>
 
 Enjoy and drive safe!
