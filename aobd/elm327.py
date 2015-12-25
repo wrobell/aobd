@@ -219,7 +219,7 @@ class ELM327:
             Resets the device, and clears all attributes to unconnected state
         """
         if self.is_connected():
-            self.__write("ATZ")
+            self.__write(b'ATZ')
             self.__port.close()
 
             self.__connected   = False
