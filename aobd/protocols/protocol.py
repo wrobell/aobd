@@ -29,8 +29,8 @@
 #                                                                      #
 ########################################################################
 
-from obd.utils import ascii_to_bytes, isHex
-from obd.debug import debug
+from aobd.utils import ascii_to_bytes, isHex
+from aobd.debug import debug
 
 
 """

@@ -29,7 +29,7 @@
 #                                                                      #
 ########################################################################
 
-from obd.utils import contiguous
+from aobd.utils import contiguous
 from .protocol import *
 
 
