@@ -44,6 +44,10 @@ parser.add_argument(
     help='explain what is being done'
 )
 parser.add_argument(
+    '-l', '--log-elm327', dest='log', default=None,
+    help='save ELM327 logging statements in a file'
+)
+parser.add_argument(
     '-i', '--interval', dest='interval', default=1, type=float,
         help='read interval'
 )
@@ -53,6 +57,17 @@ args = parser.parse_args()
 
 if args.verbose:
     logger.setLevel(logging.DEBUG)
+
+if args.log:
+    elm327_log = logging.getLogger('aobd.elm327')
+    elm327_log.setLevel(logging.DEBUG)
+    elm327_log.propagate = False
+
+    handler = logging.FileHandler(args.log)
+    handler.setFormatter(logging.Formatter(fmt))
+
+    elm327_log.addHandler(handler)
+
 
 def rpm(v):
     v = v / 4.0
