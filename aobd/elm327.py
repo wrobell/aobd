@@ -29,6 +29,8 @@
 #                                                                      #
 ########################################################################
 
+import asyncio
+import functools
 import logging
 import re
 import serial
@@ -36,9 +38,21 @@ import time
 from .protocols import *
 from .utils import numBitsSet
 
-
 logger = logging.getLogger(__name__)
 
+# 30s to read data from serial device until prompt
+TIMEOUT = 30
+
+# get rid of
+#
+# - 0x00 (ELM spec page 9)
+# - ELM prompt character
+#
+RE_CLEAN = re.compile(b'[\x00>]')
+RE_SPLIT = re.compile(b'[\r\n]')
+
+clean_data = functools.partial(RE_CLEAN.sub, b'')
+split_data = RE_SPLIT.split
 
 class ELM327:
     """
@@ -68,7 +82,7 @@ class ELM327:
         #"C" : None, # user defined 2
     }
 
-    def __init__(self, portname, baudrate):
+    def __init__(self, portname, baudrate, loop=None):
         """Initializes port by resetting device and gettings supported PIDs. """
 
         self.__connected   = False
@@ -86,10 +100,14 @@ class ELM327:
             parity=serial.PARITY_NONE,
             stopbits=1,
             bytesize=8,
-            timeout=3,
+            timeout=0,
         )
 
         logger.debug("Serial port successfully opened on " + self.get_port_name())
+
+        self._loop = asyncio.get_event_loop() if loop is None else loop
+        self._queue = asyncio.Queue()
+        self._loop.add_reader(self.__port.fileno(), self._read_data)
 
 
     def connect(self):
@@ -257,28 +275,29 @@ class ELM327:
         return None # no suitable response was returned
 
 
+###   def __send(self, cmd, delay=None):
+###       """
+###           unprotected send() function
+###
+###           will __write() the given string, no questions asked.
+###           returns result of __read() after an optional delay.
+###       """
+###       self.__write(cmd)
+###       if delay is not None:
+###           time.sleep(delay)
+###       data = self.__read()
+###       return data
+
+
     def __send(self, cmd, delay=None):
-        """
-            unprotected send() function
-
-            will __write() the given string, no questions asked.
-            returns result of __read() after an optional delay.
-        """
-
-        self.__write(cmd)
-
-        if delay is not None:
-            logger.debug("wait: %d seconds" % delay)
-            time.sleep(delay)
-
-        return self.__read()
+        data = self._loop.run_until_complete(self._send(cmd))
+        return data
 
 
     def __write(self, cmd):
         """
             "low-level" function to write a string to the port
         """
-
         if self.__port:
             cmd += "\r\n" # terminate
             self.__port.flushInput() # dump everything in the input buffer
@@ -340,6 +359,36 @@ class ELM327:
         # removes trailing spaces
         lines = [ s.strip() for s in re.split("[\r\n]", raw) if bool(s) ]
 
+        return lines
+
+
+    def _read_data(self):
+        data = self.__port.read(1024)
+        self._queue.put_nowait(data)
+
+
+    async def _read_until(self, stop):
+        data = bytearray()
+        try:
+            while True:
+                v = await asyncio.wait_for(self._queue.get(), timeout=TIMEOUT)
+                data.extend(v)
+                if stop in v:
+                    break
+        except asyncio.TimeoutError:
+            logger.warning('{} never received'.format(stop))
+        return data
+
+
+    async def _send(self, cmd):
+        self.__write(cmd)
+
+        data = await self._read_until(b'>')
+        data = clean_data(data)
+        data = split_data(data)
+
+        lines = (s.strip() for s in data)
+        lines = [s.decode() for s in lines if s]
         return lines
 
 
