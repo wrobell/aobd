@@ -103,44 +103,38 @@ class ELM327:
         self._loop.add_reader(self.__port.fileno(), self._read_data)
 
 
-    def connect(self):
+    async def connect(self):
         # ---------------------------- ATZ (reset) ----------------------------
-        self.__send("ATZ", delay=1) # wait 1 second for ELM to initialize
+        await self._send("ATZ") # wait 1 second for ELM to initialize
         # return data can be junk, so don't bother checking
 
-
         # -------------------------- ATE0 (echo OFF) --------------------------
-        r = self.__send("ATE0")
+        r = await self._send("ATE0")
         if not self.__isok(r, expectEcho=True):
             raise OBDError("ATE0 did not return 'OK'")
 
-
         # ------------------------- ATH1 (headers ON) -------------------------
-        r = self.__send("ATH1")
+        r = await self._send("ATH1")
         if not self.__isok(r):
             raise OBDError("ATH1 did not return 'OK', or echoing is still ON")
 
-
         # ------------------------ ATL0 (linefeeds OFF) -----------------------
-        r = self.__send("ATL0")
+        r = await self._send("ATL0")
         if not self.__isok(r):
             raise OBDError("ATL0 did not return 'OK'")
 
-
         # ---------------------- ATSPA8 (protocol AUTO) -----------------------
-        r = self.__send("ATSPA8")
+        r = await self._send("ATSPA8")
         if not self.__isok(r):
             raise OBDError("ATSPA8 did not return 'OK'")
-
 
         # -------------- 0100 (first command, SEARCH protocols) --------------
         # TODO: rewrite this using a "wait for prompt character"
         # rather than a fixed wait period
-        r0100 = self.__send("0100")
-
+        r0100 = await self._send("0100")
 
         # ------------------- ATDPN (list protocol number) -------------------
-        r = self.__send("ATDPN")
+        r = await self._send("ATDPN")
 
         if not r:
             raise OBDError("Describe protocol command didn't return ")
@@ -238,7 +232,7 @@ class ELM327:
         logger.debug('connection closed')
 
 
-    def send_and_parse(self, cmd, delay=None):
+    async def send_and_parse(self, cmd, delay=None):
         """
             send() function used to service all OBDCommands
 
@@ -255,7 +249,7 @@ class ELM327:
         if "AT" in cmd.upper():
             raise OBDError('AT command not allowed')
 
-        lines = self.__send(cmd, delay)
+        lines = await self._send(cmd)
 
         # parses string into list of messages
         messages = self.__protocol(lines)
@@ -267,11 +261,6 @@ class ELM327:
                 return message
 
         return None # no suitable response was returned
-
-
-    def __send(self, cmd, delay=None):
-        data = self._loop.run_until_complete(self._send(cmd))
-        return data
 
 
     def __write(self, cmd):
@@ -322,6 +311,7 @@ class ELM327:
         lines = (s.strip() for s in data)
         lines = [s.decode() for s in lines if s]
         return lines
+
 
 
 class OBDError(Exception):

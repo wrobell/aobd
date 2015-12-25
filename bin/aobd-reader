@@ -24,9 +24,9 @@
 #
 
 import argparse
+import asyncio
 import logging
 import platform
-import time
 import struct
 
 import aobd
@@ -73,14 +73,20 @@ def rpm(v):
     v = v / 4.0
     return (v, aobd.Unit.RPM)
 
-elm = ELM327(args.device, baudrate=38400)
-try:
-    elm.connect()
+
+async def reader(elm, interval):
+    await elm.connect()
     while True:
-        v = elm.send_and_parse('010C')
+        v = await elm.send_and_parse('010C')
         v = struct.unpack('>H', bytes(v.data_bytes))
         print(rpm(v[0]))
-        time.sleep(args.interval)
+        await asyncio.sleep(interval)
+
+loop = asyncio.get_event_loop()
+elm = ELM327(args.device, baudrate=38400)
+try:
+    task = reader(elm, args.interval)
+    loop.run_until_complete(task)
 finally:
     elm.close()
    
