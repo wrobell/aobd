@@ -74,11 +74,14 @@ def rpm(v):
     return (v, aobd.Unit.RPM)
 
 elm = ELM327(args.device, baudrate=38400)
-
-while True:
-    v = elm.send_and_parse('010C')
-    v = struct.unpack('>H', bytes(v.data_bytes))
-    print(rpm(v[0]))
-    time.sleep(args.interval)
+try:
+    elm.connect()
+    while True:
+        v = elm.send_and_parse('010C')
+        v = struct.unpack('>H', bytes(v.data_bytes))
+        print(rpm(v[0]))
+        time.sleep(args.interval)
+finally:
+    elm.close()
     
 # vim: sw=4:et:ai

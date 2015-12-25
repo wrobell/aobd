@@ -91,6 +91,7 @@ class ELM327:
         logger.debug("Serial port successfully opened on " + self.get_port_name())
 
 
+    def connect(self):
         # ---------------------------- ATZ (reset) ----------------------------
         self.__send("ATZ", delay=1) # wait 1 second for ELM to initialize
         # return data can be junk, so don't bother checking
@@ -210,7 +211,6 @@ class ELM327:
         """
             Resets the device, and clears all attributes to unconnected state
         """
-
         if self.is_connected():
             self.__write("ATZ")
             self.__port.close()
@@ -222,6 +222,7 @@ class ELM327:
 
         if self.__port is not None:
             self.__port.close()
+        logger.debug('connection closed')
 
 
     def send_and_parse(self, cmd, delay=None):
