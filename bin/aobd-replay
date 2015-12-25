@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+#
+# aobd - vehicle on-board diagnostics library
+#
+# Copyright (C) 2015 by Artur Wroblewski <wrobell@pld-linux.org>
+#
+# Copyright 2004 Donour Sizemore (donour@uchicago.edu)
+# Copyright 2009 Secons Ltd. (www.obdtester.com)
+# Copyright 2009 Peter J. Creath
+# Copyright 2015 Brendan Whitfield (bcw7044@rit.edu)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+"""
+Script to replay OBD data.
+
+Record the data with `aobd-reader`::
+
+    $ aobd-reader -l data.log /dev/pts/29
+
+To replay the data initialize pseudo serial devices 
+
+    $ socat -d -d pty,raw,echo=0 pty,raw,echo=0
+    2015/12/25 15:39:11 socat[25747] N PTY is /dev/pts/28
+    2015/12/25 15:39:11 socat[25747] N PTY is /dev/pts/29
+    2015/12/25 15:39:11 socat[25747] N starting data transfer loop with FDs [5,5] and [7,7]
+
+Replay the data::
+
+    $ aobd-replay /dev/pts/28 data.log
+
+And start the reader again::
+
+    $ aobd-reader -v /dev/pts/29
+
+"""
+
+import argparse
+import logging
+import platform
+import serial
+import re
+
+import aobd
+from aobd.elm327 import ELM327
+from aobd.utils import unhex
+
+RE_LINE = re.compile(r':(received|sending): b\'(.+)\'$')
+
+
+logger = logging.getLogger('aobd')
+
+fmt = '{}:%(asctime)s:%(levelname)s:%(name)s:%(thread)s:%(message)s' \
+    .format(platform.node())
+logging.basicConfig(format=fmt)
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '-v', '--verbose', action='store_true', dest='verbose', default=False,
+    help='explain what is being done'
+)
+parser.add_argument(
+    '-i', '--interval', dest='interval', default=1, type=float,
+        help='read interval'
+)
+parser.add_argument
+parser.add_argument('device', help='serial device')
+parser.add_argument('script', help='script file')
+args = parser.parse_args()
+
+if args.verbose:
+    logger.setLevel(logging.DEBUG)
+
+with open(args.script) as data:
+    convert = lambda s: s.replace('\\r', '\r').replace('\\n', '\n')
+    items = (RE_LINE.search(s) for s in data)
+    items = (m.groups() for m in items if m)
+    items = ((k, convert(s).encode()) for k, s in items)
+
+    try:
+        port = serial.Serial(
+            args.device,
+            baudrate=38400,
+            parity=serial.PARITY_NONE,
+            stopbits=1,
+            bytesize=8,
+        )
+        while True:
+            k1, s1 = next(items)
+            k2, s2 = next(items)
+            assert k1 == 'sending' and k2 == 'received', (k1, k2)
+            print('expecting:', repr(s1), 'sending back:', repr(s2))
+            data = port.read(len(s1))
+            print('GOT', repr(data))
+            assert data == s1, repr(data)
+            port.write(s2)
+    finally:
+        port.close()
+
+# vim: sw=4:et:ai
