@@ -284,7 +284,7 @@ class ELM327:
             self.__port.flush() # wait for the output buffer to finish transmitting
             logger.debug("write: " + repr(cmd))
         else:
-            logger.debug("cannot perform __write() when unconnected", True)
+            raise OBDError('Device not connected')
 
 
     def __read(self):
@@ -323,8 +323,7 @@ class ELM327:
 
                 buffer += c # whatever is left must be part of the response
         else:
-            logger.debug("cannot perform __read() when unconnected", True)
-            return ""
+            raise OBDError('Device not connected')
 
         logger.debug("read: " + repr(buffer))
 
