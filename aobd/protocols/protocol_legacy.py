@@ -29,9 +29,12 @@
 #                                                                      #
 ########################################################################
 
+import logging
+
 from aobd.utils import contiguous
 from .protocol import *
 
+logger = logging.getLogger(__name__)
 
 class LegacyProtocol(Protocol):
 
@@ -46,11 +49,11 @@ class LegacyProtocol(Protocol):
         raw_bytes = ascii_to_bytes(raw)
 
         if len(raw_bytes) < 6:
-            debug("Dropped frame for being too short")
+            logger.debug("Dropped frame for being too short")
             return None
 
         if len(raw_bytes) > 11:
-            debug("Dropped frame for being too long")
+            logger.debug("Dropped frame for being too long")
             return None
 
         # Ex.
@@ -78,7 +81,7 @@ class LegacyProtocol(Protocol):
         # test that all frames are responses to the same Mode (SID)
         if len(frames) > 1:
             if not all([mode == f.data_bytes[0] for f in frames[1:]]):
-                debug("Recieved frames from multiple commands")
+                logger.debug("Recieved frames from multiple commands")
                 return None
 
         # legacy protocols have different re-assembly
@@ -124,7 +127,7 @@ class LegacyProtocol(Protocol):
                 # check contiguity
                 indices = [f.data_bytes[2] for f in frames]
                 if not contiguous(indices, 1, len(frames)):
-                    debug("Recieved multiline response with missing frames")
+                    logger.debug("Recieved multiline response with missing frames")
                     return None
 
                 # now that they're in order, accumulate the data from each frame
