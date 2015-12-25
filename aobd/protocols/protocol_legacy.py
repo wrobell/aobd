@@ -29,6 +29,7 @@
 #                                                                      #
 ########################################################################
 
+import binascii
 import logging
 
 from aobd.utils import contiguous
@@ -46,7 +47,7 @@ class LegacyProtocol(Protocol):
     def create_frame(self, raw):
 
         frame = Frame(raw)
-        raw_bytes = ascii_to_bytes(raw)
+        raw_bytes = binascii.unhexlify(raw)
 
         if len(raw_bytes) < 6:
             logger.debug("Dropped frame for being too short")

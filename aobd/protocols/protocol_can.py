@@ -29,6 +29,8 @@
 #                                                                      #
 ########################################################################
 
+import binascii
+
 from aobd.utils import contiguous
 from .protocol import *
 
@@ -54,7 +56,7 @@ class CANProtocol(Protocol):
             raw = "00000" + raw
 
         frame = Frame(raw)
-        raw_bytes = ascii_to_bytes(raw)
+        raw_bytes = binascii.unhexlify(raw)
 
         # read header information
         if self.id_bits == 11:
