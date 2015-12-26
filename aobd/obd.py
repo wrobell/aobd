@@ -28,52 +28,25 @@ import time
 from .__version__ import __version__
 from .elm327 import ELM327
 from .commands import commands
-from .utils import scanSerial, Response
+from .utils import Response
 
 
 logger = logging.getLogger(__name__)
 
 
-class OBD(object):
+class OBD:
     """
         Class representing an OBD-II connection with it's assorted commands/sensors
     """
 
-    def __init__(self, portstr=None, baudrate=38400):
-        self.port = None
+    def __init__(self, device, baudrate=38400):
         self.supported_commands = []
-
-        logger.debug("========================== python-OBD (v%s) ==========================" % __version__)
-        self.__connect(portstr, baudrate) # initialize by connecting and loading sensors
-        logger.debug("=========================================================================")
-
-
-    def __connect(self, portstr, baudrate):
-        """
-            Attempts to instantiate an ELM327 connection object.
-            Upon success, __load_commands() is called
-        """
-
-        if portstr is None:
-            logger.debug("Using scanSerial to select port")
-            portnames = scanSerial()
-            logger.debug("Available ports: " + str(portnames))
-
-            for port in portnames:
-                logger.debug("Attempting to use port: " + str(port))
-                self.port = ELM327(port, baudrate)
-
-                if self.port.is_connected():
-                    # success! stop searching for serial
-                    break
-        else:
-            logger.debug("Explicit port defined")
-            self.port = ELM327(portstr, baudrate)
+        self.port = ELM327(device, baudrate)
 
 
     async def connect(self):
         await self.port.connect()
-        #await self.__load_commands()
+        #await self.__load_commands() FIXME
 
 
     def close(self):

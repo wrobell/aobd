@@ -40,4 +40,4 @@ from .__version__ import __version__
 from .obd import OBD
 from .obdcmd import OBDCommand
 from .commands import commands
-from .utils import scanSerial, Unit
+from .utils import Unit
