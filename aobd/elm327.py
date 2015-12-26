@@ -242,7 +242,6 @@ class ELM327:
             Returns the Message object from the primary ECU, or None,
             if no appropriate response was recieved.
         """
-
         if not self.is_connected():
             raise OBDError('Device not connected')
 
@@ -267,15 +266,12 @@ class ELM327:
         """
             "low-level" function to write a string to the port
         """
-        if self.__port:
-            cmd += b'\r\n' # terminate
-            logger.debug('sending: ' + repr(cmd))
-            self.__port.flushInput() # dump everything in the input buffer
-            self.__port.write(cmd) # turn the string into bytes and write
-            self.__port.flush() # wait for the output buffer to finish transmitting
-            logger.debug('data sent')
-        else:
-            raise OBDError('Device not connected')
+        cmd += b'\r\n' # terminate
+        logger.debug('sending: ' + repr(cmd))
+        self.__port.flushInput() # dump everything in the input buffer
+        self.__port.write(cmd) # turn the string into bytes and write
+        self.__port.flush() # wait for the output buffer to finish transmitting
+        logger.debug('data sent')
 
 
     def _read_data(self):
