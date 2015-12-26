@@ -72,10 +72,10 @@ if args.log:
 async def reader(dev, commands, interval):
     await dev.connect()
     while True:
-        for cmd in commands:
-            v = await dev.query(cmd)
-            head = '{} [{}]:'.format(cmd.desc, v.unit)
-            print('{:30} {:.2f}'.format(head, v.value))
+        async for response in dev.query(commands):
+            cmd = response.command
+            head = '{} [{}]:'.format(cmd.desc, response.unit)
+            print('{:30} {:.2f}'.format(head, response.value))
         print()
         await asyncio.sleep(interval)
 

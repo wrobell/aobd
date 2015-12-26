@@ -22,16 +22,33 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import collections
+import functools
 import logging
 import time
 
 from .__version__ import __version__
 from .elm327 import ELM327, OBDError
 from .commands import commands
+from .obdcmd import OBDCommand
 from .utils import Response
 
 
 logger = logging.getLogger(__name__)
+
+
+def dispatch(func):
+    """
+    Like `functools.singledispatch` but for class methods.
+
+    http://stackoverflow.com/a/24602374/722424
+    """
+    dispatcher = functools.singledispatch(func)
+    def wrapper(*args, **kw):
+        return dispatcher.dispatch(args[1].__class__)(*args, **kw)
+    wrapper.register = dispatcher.register
+    functools.update_wrapper(wrapper, func)
+    return wrapper
 
 
 class OBD:
@@ -49,11 +66,21 @@ class OBD:
         await self._load_commands()
 
 
-    async def query(self, cmd):
-        logger.debug('sending command: {}'.format(cmd))
+    @dispatch
+    def query(self, cmd):
+        raise NotImplementedError('Not implemented for {}'.format(type(cmd)))
 
+
+    @query.register(OBDCommand)
+    async def _query(self, cmd):
+        logger.debug('sending command: {}'.format(cmd))
         msg = await self.port.query(cmd.get_command())
         return Response() if msg is None else cmd(msg)
+
+
+    @query.register(collections.Iterable)
+    def _query(self, cmd):
+        return OBDIterator(self.port, cmd)
 
 
     def close(self):
@@ -123,6 +150,24 @@ class OBD:
 
         n = len(self._commands)
         logger.info('number of commands supported: {}'.format(n))
+
+
+class OBDIterator:
+    def __init__(self, port, commands):
+        self.port = port
+        self.commands = iter(commands)
+
+    async def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        try:
+            cmd = next(self.commands)
+        except StopIteration:
+            raise StopAsyncIteration
+
+        msg = await self.port.query(cmd.get_command())
+        return Response() if msg is None else cmd(msg)
 
 
 # vim: sw=4:et:ai
