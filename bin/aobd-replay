@@ -48,14 +48,16 @@ And start the reader again::
 """
 
 import argparse
+import itertools
 import logging
+import operator
 import platform
 import serial
 import re
 import time
+from dateutil.parser import parse as dparse
 
-
-RE_LINE = re.compile(r':(received|sending): b\'(.+)\'$')
+RE_LINE = re.compile(r':(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d,\d+):.+:(received|sending): b\'(.+)\'$', re.S)
 
 fmt = '{}:%(asctime)s:%(levelname)s:%(name)s:%(thread)s:%(message)s' \
     .format(platform.node())
@@ -86,7 +88,11 @@ with open(args.script) as data:
     convert = lambda s: s.replace('\\r', '\r').replace('\\n', '\n')
     items = (RE_LINE.search(s) for s in data)
     items = (m.groups() for m in items if m)
-    items = ((k, convert(s).encode()) for k, s in items)
+    items = (
+        (k, dparse(t.replace(',', '.')), convert(s).encode())
+        for t, k, s in items
+    )
+    items = itertools.groupby(items, operator.itemgetter(0))
 
     try:
         port = serial.Serial(
@@ -96,18 +102,35 @@ with open(args.script) as data:
             stopbits=1,
             bytesize=8,
         )
+        extract = lambda item: (item[0], tuple(item[1]))
         while True:
-            k1, s1 = next(items)
-            k2, s2 = next(items)
-            assert k1 == 'sending' and k2 == 'received', (k1, k2)
-            print('expecting:', repr(s1), 'sending back:', repr(s2))
-            data = port.read(len(s1))
-            assert data == s1, repr(data)
+            try:
+                k1, v1 = extract(next(items))
+                assert len(v1) == 1, v1
+            except StopIteration:
+                break
 
-            port.write(s2)
-            time.sleep(args.prompt_sleep)
-            port.write(b'>')
+            s = v1[0][2]
+            last_time = v1[0][1]
+            print('expecting:', repr(s))
+            data = port.read(len(s))
+
+            try:
+                k2, v2 = extract(next(items))
+                assert len(v2) > 0
+            except StopIteration:
+                break
+
+            times = [last_time] + [v[1] for v in v2]
+            times = zip(times[0:], times[1:])
+            times = [(t2 - t1).total_seconds() for t1, t2 in times]
+            data = (v[2] for v in v2)
+            for s, t in zip(data, times):
+                print('sleep for {}, send: {}'.format(t, repr(s)))
+                time.sleep(t)
+                port.write(s)
     finally:
+        print('done')
         port.close()
 
 # vim: sw=4:et:ai
