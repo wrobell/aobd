@@ -225,7 +225,7 @@ class ELM327:
             self.__protocol = None
             self.__primary_ecu = None
 
-            logger.debug('connection closed')
+        logger.info('port closed')
 
 
     async def query(self, cmd):

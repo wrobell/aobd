@@ -50,10 +50,14 @@ class OBD:
 
 
     def close(self):
-        """ Closes the connection """
-        if self.is_connected():
-            logger.debug("Closing connection")
-            self.port.close()
+        """
+        Close ELM327 port and set OBD instance to unconnected state.
+        """
+        logger.info('closing obd-ii port')
+        try:
+            if self.is_connected():
+                self.port.close()
+        finally:
             self.port = None
             self.supported_commands = []
 
