@@ -31,12 +31,12 @@ FMT_CMD = '{}{}: {}'.format
 
 
 class OBDCommand:
-    def __init__(self, name, desc, mode, pid, returnBytes, decoder, supported=False):
+    def __init__(self, name, desc, mode, pid, n_bytes, decoder, supported=False):
         self.name       = name
         self.desc       = desc
         self.mode       = mode
         self.pid        = pid
-        self.bytes      = returnBytes # number of bytes expected in return
+        self.bytes      = n_bytes # number of bytes expected in return
         self.decode     = decoder
         self.supported  = supported
 
