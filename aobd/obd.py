@@ -46,7 +46,7 @@ class OBD:
 
     async def connect(self):
         await self.port.connect()
-        await self.__load_commands()
+        await self._load_commands()
 
 
     async def query(self, cmd):
@@ -85,50 +85,44 @@ class OBD:
         return self._commands
 
 
-    async def __load_commands(self):
+    async def _load_commands(self):
         """
-            Queries for available PIDs, sets their support status,
-            and compiles a list of command objects.
+        Query vehicle OBD port for supported commands.
+
+        Check if each PID available, set its support status and create
+        collection of supported command objects.
         """
+        logger.debug('querying for supported PIDs (commands)...')
 
-        logger.debug("querying for supported PIDs (commands)...")
+        # PID listing commands should sequentialy become supported
+        # Mode 1 PID 0 is assumed to always be supported
+        data = commands.pid_getters()
+        pid_getters = set(data)
+        data = (p for p in data if self.supports(p))
+        responses = []
+        for get in data:
+            response = await self.query(get)
+            responses.append((get, response))
 
-        items = []
-
-        pid_getters = commands.pid_getters()
-
-        for get in pid_getters:
-            # PID listing commands should sequentialy become supported
-            # Mode 1 PID 0 is assumed to always be supported
-            if not self.supports(get):
-                continue
-
-            response = await self.query(get) # ask nicely
-
-            if response.is_null():
-                continue
-            
-            supported = response.value # string of binary 01010101010101
-
-            # loop through PIDs binary
-            for i in range(len(supported)):
-                if supported[i] == "1":
-
-                    mode = get.get_mode_int()
-                    pid  = get.get_pid_int() + i + 1
-
-                    if commands.has_pid(mode, pid):
-                        c = commands[mode][pid]
-                        c.supported = True
-
-                        # don't add PID getters to the command list
-                        if c not in pid_getters:
-                            items.append(c)
-
-        self._commands = tuple(items)
-        logger.info(
-            'number of commands supported: {}'.format(len(self._commands))
+        # r.value is string of binary 01010101010101
+        responses = ((p, r.value) for p, r in responses if not r.is_null())
+        items = (
+            (p.get_mode_int(), p.get_pid_int() + i + 1)
+            for p, v in responses
+            for i, s in enumerate(v) if s == '1'
         )
+        items = (
+            commands[mode][pid] for mode, pid in items
+            if commands.has_pid(mode, pid)
+        )
+        # don't add PID getters to the command list
+        items = tuple(c for c in items if c not in pid_getters)
+        for c in items:
+            c.supported = True
+        self._commands = items
+
+        n = len(self._commands)
+        logger.info('number of commands supported: {}'.format(n))
 
 
 # vim: sw=4:et:ai
