@@ -41,4 +41,3 @@ from .obd import OBD
 from .obdcmd import OBDCommand
 from .commands import commands
 from .utils import scanSerial, Unit
-from .async import Async
