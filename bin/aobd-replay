@@ -73,8 +73,8 @@ parser.add_argument(
         help='read interval'
 )
 parser.add_argument(
-    '-p', '--prompt-sleep', dest='prompt_sleep', default=0, type=float,
-        help='how long to sleep before sending prompt (default is 0)'
+    '-d', '--sleep-divisor', dest='divisor', default=1, type=float,
+        help='time sleep divisor to speed up simulation (default 1)'
 )
 parser.add_argument
 parser.add_argument('device', help='serial device')
@@ -127,7 +127,7 @@ with open(args.script) as data:
             data = (v[2] for v in v2)
             for s, t in zip(data, times):
                 print('sleep for {}, send: {}'.format(t, repr(s)))
-                time.sleep(t)
+                time.sleep(t / args.divisor)
                 port.write(s)
     finally:
         print('done')
