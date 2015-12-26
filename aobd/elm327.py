@@ -269,12 +269,11 @@ class ELM327:
         """
         if self.__port:
             cmd += b'\r\n' # terminate
-            self.__port.flushInput() # dump everything in the input buffer
-
             logger.debug('sending: ' + repr(cmd))
-
+            self.__port.flushInput() # dump everything in the input buffer
             self.__port.write(cmd) # turn the string into bytes and write
             self.__port.flush() # wait for the output buffer to finish transmitting
+            logger.debug('data sent')
         else:
             raise OBDError('Device not connected')
 
@@ -289,6 +288,10 @@ class ELM327:
         try:
             while True:
                 v = await asyncio.wait_for(self._queue.get(), timeout=TIMEOUT)
+
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('received: {}'.format(v))
+
                 data.extend(v)
                 if stop in v:
                     break
@@ -301,9 +304,6 @@ class ELM327:
         self.__write(cmd)
 
         data = await self._read_until(b'>')
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('received: {}'.format(bytes(data)))
-
         data = clean_data(data)
         data = split_data(data)
 
