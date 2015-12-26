@@ -41,7 +41,7 @@ Quick start::
     0115: O2_B1S2              O2: Bank 1 - Sensor 2 Voltage
     011C: OBD_COMPLIANCE       OBD Standards Compliance
 
-    $ PYTHONPATH=. ./bin/aobd-reader /dev/pts/29 rpm throttle_pos speed
+    $ PYTHONPATH=. ./bin/aobd-reader /dev/PORT rpm throttle_pos speed
     Engine RPM [RPM]:              929.00
     Throttle Position [%]:         9.80
     Vehicle Speed [kph]:           14.00
