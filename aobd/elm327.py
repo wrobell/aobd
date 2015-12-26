@@ -213,20 +213,19 @@ class ELM327:
 
     def close(self):
         """
-            Resets the device, and clears all attributes to unconnected state
+        Close serial port and set `ELM327` instance to unconnected state.
         """
-        if self.is_connected():
-            self.__write(b'ATZ')
-            self.__port.close()
-
+        try:
+            if self.is_connected():
+                self.__write(b'ATZ')
+                self.__port.close()
+        finally:
             self.__connected = False
             self.__port = None
             self.__protocol = None
             self.__primary_ecu = None
 
-        if self.__port is not None:
-            self.__port.close()
-        logger.debug('connection closed')
+            logger.debug('connection closed')
 
 
     async def query(self, cmd):
