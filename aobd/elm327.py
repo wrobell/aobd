@@ -53,8 +53,7 @@ class ELM327:
         After instantiation with a portname (/dev/ttyUSB0, etc...),
         the following functions become available:
 
-            send_and_parse()
-            get_port_name()
+            query()
             is_connected()
             close()
     """
@@ -85,7 +84,7 @@ class ELM327:
 
         # ------------- open port -------------
 
-        logger.debug("Opening serial port '%s'" % portname)
+        logger.debug('opening serial port {}'.format(portname))
 
         self.__port = serial.Serial(
             portname,
@@ -96,11 +95,13 @@ class ELM327:
             timeout=0,
         )
 
-        logger.debug("Serial port successfully opened on " + self.get_port_name())
-
         self._loop = asyncio.get_event_loop() if loop is None else loop
         self._queue = asyncio.Queue()
         self._loop.add_reader(self.__port.fileno(), self._read_data)
+        logger.debug(
+            'started to watch serial port file descriptior {}'
+            .format(self.__port.fileno())
+        )
 
 
     async def connect(self):
