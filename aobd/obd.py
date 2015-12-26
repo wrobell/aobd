@@ -46,7 +46,7 @@ class OBD:
 
     async def connect(self):
         await self.port.connect()
-        #await self.__load_commands()
+        await self.__load_commands()
 
 
     async def query(self, cmd):
