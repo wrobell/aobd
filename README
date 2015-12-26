@@ -18,10 +18,28 @@ The goals
 Required Python 3.5 or later and pySerial (https://pythonhosted.org/pyserial/)
 library.
 
-Quick start::
+Quick install (library has no release yet)::
 
     $ git clone https://github.com/wrobell/aobd.git
     $ cd aobd
+
+Example of reading vehicle RPM::
+
+    import asyncio
+    import aobd
+
+    async def reader(dev):
+        await dev.connect()
+        response = await dev.query(aobd.commands.RPM)
+
+        print(response.value)
+        print(response.unit)
+
+    loop = asyncio.get_event_loop()
+    dev = aobd.OBD('/dev/PORT')
+    loop.run_until_complete(reader(dev))
+
+Command-line tools allow to list available commands and read data::
 
     $ PYTHONPATH=. ./bin/aobd-list /dev/PORT
     0101: STATUS               Status since DTCs cleared
