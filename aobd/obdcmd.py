@@ -27,6 +27,9 @@ import re
 from .utils import *
 
 
+FMT_CMD = '{}{}: {}'.format
+
+
 class OBDCommand():
     def __init__(self, name, desc, mode, pid, returnBytes, decoder, supported=False):
         self.name       = name
@@ -75,7 +78,7 @@ class OBDCommand():
         return r
 
     def __str__(self):
-        return "%s%s: %s" % (self.mode, self.pid, self.desc)
+        return FMT_CMD(self.mode.decode(), self.pid.decode(), self.desc)
 
     def __hash__(self):
         # needed for using commands as keys in a dict (see async.py)
