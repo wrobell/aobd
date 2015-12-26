@@ -1,0 +1,44 @@
+greymatter:2015-12-26 16:49:55,220:DEBUG:aobd.elm327:139858646992640:opening serial port /dev/rfcomm0
+greymatter:2015-12-26 16:49:55,220:DEBUG:aobd.elm327:139858646992640:started to watch serial port file descriptior 10
+greymatter:2015-12-26 16:49:55,221:DEBUG:aobd.elm327:139858646992640:sending: b'ATZ\r\n'
+greymatter:2015-12-26 16:49:58,925:DEBUG:aobd.elm327:139858646992640:data sent
+greymatter:2015-12-26 16:49:58,961:DEBUG:aobd.elm327:139858646992640:received: b'A'
+greymatter:2015-12-26 16:49:58,967:DEBUG:aobd.elm327:139858646992640:received: b'TZ\r'
+greymatter:2015-12-26 16:49:59,753:DEBUG:aobd.elm327:139858646992640:received: b'\r\rE'
+greymatter:2015-12-26 16:49:59,754:DEBUG:aobd.elm327:139858646992640:received: b'LM327 v1.4\r\r>'
+greymatter:2015-12-26 16:49:59,754:DEBUG:aobd.elm327:139858646992640:sending: b'ATE0\r\n'
+greymatter:2015-12-26 16:49:59,755:DEBUG:aobd.elm327:139858646992640:data sent
+greymatter:2015-12-26 16:49:59,791:DEBUG:aobd.elm327:139858646992640:received: b'ATE0\rOK\r\r>'
+greymatter:2015-12-26 16:49:59,792:DEBUG:aobd.elm327:139858646992640:sending: b'ATH1\r\n'
+greymatter:2015-12-26 16:49:59,792:DEBUG:aobd.elm327:139858646992640:data sent
+greymatter:2015-12-26 16:49:59,829:DEBUG:aobd.elm327:139858646992640:received: b'OK\r\r>'
+greymatter:2015-12-26 16:49:59,829:DEBUG:aobd.elm327:139858646992640:sending: b'ATL0\r\n'
+greymatter:2015-12-26 16:49:59,830:DEBUG:aobd.elm327:139858646992640:data sent
+greymatter:2015-12-26 16:49:59,866:DEBUG:aobd.elm327:139858646992640:received: b'OK\r\r>'
+greymatter:2015-12-26 16:49:59,867:DEBUG:aobd.elm327:139858646992640:sending: b'ATSPA8\r\n'
+greymatter:2015-12-26 16:49:59,867:DEBUG:aobd.elm327:139858646992640:data sent
+greymatter:2015-12-26 16:49:59,904:DEBUG:aobd.elm327:139858646992640:received: b'OK\r\r'
+greymatter:2015-12-26 16:49:59,910:DEBUG:aobd.elm327:139858646992640:received: b'>'
+greymatter:2015-12-26 16:49:59,911:DEBUG:aobd.elm327:139858646992640:sending: b'0100\r\n'
+greymatter:2015-12-26 16:49:59,911:DEBUG:aobd.elm327:139858646992640:data sent
+greymatter:2015-12-26 16:49:59,948:DEBUG:aobd.elm327:139858646992640:received: b'SEARCHIN'
+greymatter:2015-12-26 16:49:59,949:DEBUG:aobd.elm327:139858646992640:received: b'G...\r'
+greymatter:2015-12-26 16:50:05,111:DEBUG:aobd.elm327:139858646992640:received: b'48'
+greymatter:2015-12-26 16:50:05,113:DEBUG:aobd.elm327:139858646992640:received: b' 6B 11 41 00 BE 3E B8 10 '
+greymatter:2015-12-26 16:50:05,146:DEBUG:aobd.elm327:139858646992640:received: b'C9 \r'
+greymatter:2015-12-26 16:50:05,341:DEBUG:aobd.elm327:139858646992640:received: b'\r'
+greymatter:2015-12-26 16:50:05,374:DEBUG:aobd.elm327:139858646992640:received: b'>'
+greymatter:2015-12-26 16:50:05,374:DEBUG:aobd.elm327:139858646992640:sending: b'ATDPN\r\n'
+greymatter:2015-12-26 16:50:05,375:DEBUG:aobd.elm327:139858646992640:data sent
+greymatter:2015-12-26 16:50:05,411:DEBUG:aobd.elm327:139858646992640:received: b'A3\r\r>'
+greymatter:2015-12-26 16:50:05,412:INFO:aobd.elm327:139858646992640:protocol id: 3
+greymatter:2015-12-26 16:50:05,412:DEBUG:aobd.elm327:139858646992640:Connection successful
+greymatter:2015-12-26 16:50:05,414:DEBUG:aobd.elm327:139858646992640:sending: b'0100\r\n'
+greymatter:2015-12-26 16:50:05,414:DEBUG:aobd.elm327:139858646992640:data sent
+greymatter:2015-12-26 16:50:05,567:DEBUG:aobd.elm327:139858646992640:received: b'48'
+greymatter:2015-12-26 16:50:05,601:DEBUG:aobd.elm327:139858646992640:received: b' 6B 11 41 00 BE 3E B8 10 '
+greymatter:2015-12-26 16:50:05,603:DEBUG:aobd.elm327:139858646992640:received: b'C9 \r'
+greymatter:2015-12-26 16:50:05,814:DEBUG:aobd.elm327:139858646992640:received: b'\r>'
+greymatter:2015-12-26 16:50:05,818:DEBUG:aobd.elm327:139858646992640:sending: b'ATZ\r\n'
+greymatter:2015-12-26 16:50:05,819:DEBUG:aobd.elm327:139858646992640:data sent
+greymatter:2015-12-26 16:50:05,819:INFO:aobd.elm327:139858646992640:port closed
