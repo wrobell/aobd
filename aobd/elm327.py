@@ -207,10 +207,6 @@ class ELM327:
                 return tx_id
 
 
-    def get_port_name(self):
-        return self.__port.portstr if (self.__port is not None) else "No Port"
-
-
     def is_connected(self):
         return self.__connected and (self.__port is not None)
 
@@ -223,9 +219,9 @@ class ELM327:
             self.__write(b'ATZ')
             self.__port.close()
 
-            self.__connected   = False
-            self.__port        = None
-            self.__protocol    = None
+            self.__connected = False
+            self.__port = None
+            self.__protocol = None
             self.__primary_ecu = None
 
         if self.__port is not None:

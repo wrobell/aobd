@@ -87,15 +87,7 @@ class OBD(object):
 
     def is_connected(self):
         """ Returns a boolean for whether a successful serial connection was made """
-        return (self.port is not None) and self.port.is_connected()
-
-
-    def get_port_name(self):
-        """ Returns the name of the currently connected port """
-        if self.is_connected():
-            return self.port.get_port_name()
-        else:
-            return "Not connected to any port"
+        return self.port is not None and self.port.is_connected()
 
 
     async def __load_commands(self):
