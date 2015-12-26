@@ -55,16 +55,17 @@ class OBD:
         """
         logger.info('closing obd-ii port')
         try:
-            if self.is_connected():
+            if self.connected:
                 self.port.close()
         finally:
             self.port = None
             self.supported_commands = []
 
 
-    def is_connected(self):
+    @property
+    def connected(self):
         """ Returns a boolean for whether a successful serial connection was made """
-        return self.port is not None and self.port.is_connected()
+        return self.port is not None and self.port.connected
 
 
     async def __load_commands(self):
@@ -130,7 +131,7 @@ class OBD:
             sends the given command, retrieves and parses the response
         """
 
-        if not self.is_connected():
+        if not self.connected:
             logger.debug("Query failed, no connection available", True)
             return Response() # return empty response
 

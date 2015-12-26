@@ -54,7 +54,7 @@ class ELM327:
         the following functions become available:
 
             query()
-            is_connected()
+            connected
             close()
     """
 
@@ -207,7 +207,8 @@ class ELM327:
                 return tx_id
 
 
-    def is_connected(self):
+    @property
+    def connected(self):
         return self.__connected and (self.__port is not None)
 
 
@@ -216,7 +217,7 @@ class ELM327:
         Close serial port and set `ELM327` instance to unconnected state.
         """
         try:
-            if self.is_connected():
+            if self.connected:
                 self.__write(b'ATZ')
                 self.__port.close()
         finally:
@@ -238,7 +239,7 @@ class ELM327:
             Returns the Message object from the primary ECU, or None,
             if no appropriate response was recieved.
         """
-        if not self.is_connected():
+        if not self.connected:
             raise OBDError('Device not connected')
 
         if b'AT' in cmd.upper():
