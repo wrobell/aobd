@@ -26,7 +26,7 @@ import logging
 import time
 
 from .__version__ import __version__
-from .elm327 import ELM327
+from .elm327 import ELM327, OBDError
 from .commands import commands
 from .utils import Response
 
@@ -40,13 +40,20 @@ class OBD:
     """
 
     def __init__(self, device, baudrate=38400):
-        self.supported_commands = []
+        self._commands = []
         self.port = ELM327(device, baudrate)
 
 
     async def connect(self):
         await self.port.connect()
-        #await self.__load_commands() FIXME
+        #await self.__load_commands()
+
+
+    async def query(self, cmd):
+        logger.debug('sending command: {}'.format(cmd))
+
+        msg = await self.port.query(cmd.get_command())
+        return Response() if msg is None else cmd(msg)
 
 
     def close(self):
@@ -59,13 +66,23 @@ class OBD:
                 self.port.close()
         finally:
             self.port = None
-            self.supported_commands = []
+            self._commands = []
+
+
+    def supports(self, cmd):
+        """ Returns a boolean for whether the car supports the given command """
+        return commands.has_command(cmd) and cmd.supported
 
 
     @property
     def connected(self):
         """ Returns a boolean for whether a successful serial connection was made """
         return self.port is not None and self.port.connected
+
+
+    @property
+    def commands(self):
+        return self._commands
 
 
     async def __load_commands(self):
@@ -76,7 +93,7 @@ class OBD:
 
         logger.debug("querying for supported PIDs (commands)...")
 
-        self.supported_commands = []
+        items = []
 
         pid_getters = commands.pid_getters()
 
@@ -86,7 +103,7 @@ class OBD:
             if not self.supports(get):
                 continue
 
-            response = await self.__send(get) # ask nicely
+            response = await self.query(get) # ask nicely
 
             if response.is_null():
                 continue
@@ -106,56 +123,12 @@ class OBD:
 
                         # don't add PID getters to the command list
                         if c not in pid_getters:
-                            self.supported_commands.append(c)
+                            items.append(c)
 
-        logger.debug("finished querying with %d commands supported" % len(self.supported_commands))
-
-
-    def print_commands(self):
-        """
-            Utility function meant for working in interactive mode.
-            Prints all commands supported by the car.
-        """
-        for c in self.supported_commands:
-            print(str(c))
+        self._commands = tuple(items)
+        logger.info(
+            'number of commands supported: {}'.format(len(self._commands))
+        )
 
 
-    def supports(self, c):
-        """ Returns a boolean for whether the car supports the given command """
-        return commands.has_command(c) and c.supported
-
-
-    async def __send(self, c):
-        """
-            Back-end implementation of query()
-            sends the given command, retrieves and parses the response
-        """
-
-        if not self.connected:
-            logger.debug("Query failed, no connection available", True)
-            return Response() # return empty response
-
-        logger.debug("Sending command: %s" % str(c))
-
-        # send command and retrieve message
-        m = await self.port.query(c.get_command())
-
-        if m is None:
-            return Response() # return empty response
-        else:
-            return c(m) # compute a response object
-
-
-    async def query(self, c, force=False):
-        """
-            primary API function. Sends commands to the car, and
-            protects against sending unsupported commands.
-        """
-
-        # check that the command is supported
-        if self.supports(c) or force:
-            r = await self.__send(c)
-            return r
-        else:
-            logger.debug("'%s' is not supported" % str(c), True)
-            return Response() # return empty response
+# vim: sw=4:et:ai

@@ -75,7 +75,7 @@ async def reader(dev, commands, interval):
     await dev.connect()
     while True:
         for cmd in commands:
-            v = await dev.query(cmd, force=True)
+            v = await dev.query(cmd)
             print('{} {}'.format(v.value, v.unit))
         await asyncio.sleep(interval)
 
