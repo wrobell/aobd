@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+#
+# aobd - vehicle on-board diagnostics library
+#
+# Copyright (C) 2015 by Artur Wroblewski <wrobell@pld-linux.org>
+#
+# Copyright 2004 Donour Sizemore (donour@uchicago.edu)
+# Copyright 2009 Secons Ltd. (www.obdtester.com)
+# Copyright 2009 Peter J. Creath
+# Copyright 2015 Brendan Whitfield (bcw7044@rit.edu)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+"""
+List OBD commands supported by vehicle.
+"""
+
+import argparse
+import asyncio
+import logging
+import platform
+import struct
+
+import aobd
+
+logger = logging.getLogger('aobd')
+
+fmt = '{}:%(asctime)s:%(levelname)s:%(name)s:%(thread)s:%(message)s' \
+    .format(platform.node())
+logging.basicConfig(format=fmt)
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '-v', '--verbose', action='store_true', dest='verbose', default=False,
+    help='explain what is being done'
+)
+parser.add_argument(
+    '-l', '--log-elm327', dest='log', default=None,
+    help='save ELM327 logging statements in a file'
+)
+parser.add_argument('device', help='serial device')
+args = parser.parse_args()
+
+if args.verbose:
+    logger.setLevel(logging.DEBUG)
+
+if args.log:
+    elm327_log = logging.getLogger('aobd.elm327')
+    elm327_log.setLevel(logging.DEBUG)
+    elm327_log.propagate = False
+
+    handler = logging.FileHandler(args.log)
+    handler.setFormatter(logging.Formatter(fmt))
+
+    elm327_log.addHandler(handler)
+
+
+async def commands(dev):
+    await dev.connect()
+    return dev.commands
+
+loop = asyncio.get_event_loop()
+dev = aobd.OBD(args.device)
+try:
+    task = commands(dev)
+    items = loop.run_until_complete(task)
+    for c in items:
+        print(str(c))
+finally:
+    dev.close()
+   
+# vim: sw=4:et:ai
+
