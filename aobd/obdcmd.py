@@ -30,7 +30,7 @@ from .utils import *
 FMT_CMD = '{}{}: {}'.format
 
 
-class OBDCommand():
+class OBDCommand:
     def __init__(self, name, desc, mode, pid, returnBytes, decoder, supported=False):
         self.name       = name
         self.desc       = desc
