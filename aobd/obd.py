@@ -40,7 +40,7 @@ class OBD:
     """
 
     def __init__(self, device, baudrate=38400):
-        self._commands = []
+        self._commands = tuple()
         self.port = ELM327(device, baudrate)
 
 
