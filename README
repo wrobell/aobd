@@ -17,3 +17,39 @@ The goals
 
 Required Python 3.5 or later and pySerial (https://pythonhosted.org/pyserial/)
 library.
+
+Quick start::
+
+    $ git clone https://github.com/wrobell/aobd.git
+    $ cd aobd
+
+    $ PYTHONPATH=. ./bin/aobd-list /dev/PORT
+    0101: STATUS               Status since DTCs cleared
+    0103: FUEL_STATUS          Fuel System Status
+    0104: ENGINE_LOAD          Calculated Engine Load
+    0105: COOLANT_TEMP         Engine Coolant Temperature
+    0106: SHORT_FUEL_TRIM_1    Short Term Fuel Trim - Bank 1
+    0107: LONG_FUEL_TRIM_1     Long Term Fuel Trim - Bank 1
+    010B: INTAKE_PRESSURE      Intake Manifold Pressure
+    010C: RPM                  Engine RPM
+    010D: SPEED                Vehicle Speed
+    010E: TIMING_ADVANCE       Timing Advance
+    010F: INTAKE_TEMP          Intake Air Temp
+    0111: THROTTLE_POS         Throttle Position
+    0113: O2_SENSORS           O2 Sensors Present
+    0114: O2_B1S1              O2: Bank 1 - Sensor 1 Voltage
+    0115: O2_B1S2              O2: Bank 1 - Sensor 2 Voltage
+    011C: OBD_COMPLIANCE       OBD Standards Compliance
+
+    $ PYTHONPATH=. ./bin/aobd-reader /dev/pts/29 rpm throttle_pos speed
+    Engine RPM [RPM]:              929.00
+    Throttle Position [%]:         9.80
+    Vehicle Speed [kph]:           14.00
+
+    Engine RPM [RPM]:              6.25
+    Throttle Position [%]:         5.49
+    Vehicle Speed [kph]:           25.00
+
+    Engine RPM [RPM]:              922.25
+    Throttle Position [%]:         9.80
+    Vehicle Speed [kph]:           14.00
