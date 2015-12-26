@@ -1,33 +1,26 @@
-
-########################################################################
-#                                                                      #
-# python-OBD: A python OBD-II serial module derived from pyobd         #
-#                                                                      #
-# Copyright 2004 Donour Sizemore (donour@uchicago.edu)                 #
-# Copyright 2009 Secons Ltd. (www.obdtester.com)                       #
-# Copyright 2009 Peter J. Creath                                       #
-# Copyright 2015 Brendan Whitfield (bcw7044@rit.edu)                   #
-#                                                                      #
-########################################################################
-#                                                                      #
-# commands.py                                                          #
-#                                                                      #
-# This file is part of python-OBD (a derivative of pyOBD)              #
-#                                                                      #
-# python-OBD is free software: you can redistribute it and/or modify   #
-# it under the terms of the GNU General Public License as published by #
-# the Free Software Foundation, either version 2 of the License, or    #
-# (at your option) any later version.                                  #
-#                                                                      #
-# python-OBD is distributed in the hope that it will be useful,        #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        #
-# GNU General Public License for more details.                         #
-#                                                                      #
-# You should have received a copy of the GNU General Public License    #
-# along with python-OBD.  If not, see <http://www.gnu.org/licenses/>.  #
-#                                                                      #
-########################################################################
+#
+# aobd - vehicle on-board diagnostics library
+#
+# Copyright (C) 2015 by Artur Wroblewski <wrobell@pld-linux.org>
+#
+# Copyright 2004 Donour Sizemore (donour@uchicago.edu)
+# Copyright 2009 Secons Ltd. (www.obdtester.com)
+# Copyright 2009 Peter J. Creath
+# Copyright 2015 Brendan Whitfield (bcw7044@rit.edu)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 import logging
 
@@ -36,12 +29,7 @@ from .decoders import *
 
 logger = logging.getLogger(__name__)
 
-
-
-'''
-Define command tables
-'''
-
+# Define command tables
 # NOTE: the SENSOR NAME field will be used as the dict key for that sensor
 # NOTE: commands MUST be in PID order, one command per PID (for fast lookup using __mode1__[pid])
 
@@ -177,10 +165,7 @@ __mode7__ = [
 
 
 
-'''
-Assemble the command tables by mode, and allow access by sensor name
-'''
-
+# assemble the command tables by mode, and allow access by sensor name
 class Commands():
     def __init__(self):
 
@@ -204,11 +189,14 @@ class Commands():
 
     def __getitem__(self, key):
         """
-            commands can be accessed by name, or by mode/pid
+        Get command by name or (mode, pid).
+
+        For example::
 
             obd.commands.RPM
             obd.commands["RPM"]
             obd.commands[1][12] # mode 1, PID 12 (RPM)
+
         """
 
         if isinstance(key, int):
@@ -216,15 +204,14 @@ class Commands():
         elif isinstance(key, str) or isinstance(key, unicode):
             return self.__dict__[key]
         else:
-            logger.debug("OBD commands can only be retrieved by PID value or dict name", True)
+            raise TypeError('OBD command can be retrieved by name or PID value')
 
 
     def __len__(self):
-        """ returns the number of commands supported by python-OBD """
-        l = 0
-        for m in self.modes:
-            l += len(m)
-        return l
+        """
+        Return number of supported commands.
+        """
+        return sum(len(m) for m in self.modes)
 
 
     def __contains__(self, s):
@@ -233,56 +220,59 @@ class Commands():
 
 
     def pid_getters(self):
-        """ returns a list of PID GET commands """
-        getters = []
-        for m in self.modes:
-            for c in m:
-                if c.decode == pid: # GET commands have a special decoder
-                    getters.append(c)
-        return getters
+        """
+        Get list of PID GET commands.
+        """
+        # pid: GET commands have a special decoder
+        return [c for m in self.modes for c in m if c.decode == pid]
 
 
-    def set_supported(self, mode, pid, v):
-        """ sets the boolean supported flag for the given command """
-        if isinstance(v, bool):
-            if self.has(mode, pid):
-                self.modes[mode][pid].supported = v
-        else:
-            logger.debug("set_supported() only accepts boolean values", True)
+    def set_supported(self, mode, pid, value):
+        """
+        Set the supported flag for the given command.
+        """
+        if not isinstance(v, bool):
+            raise TypeError('Value should be boolean')
+
+        if self.has(mode, pid):
+            self.modes[mode][pid].supported = value
 
 
-    def has_command(self, c):
-        """ checks for existance of a command by OBDCommand object """
-        if isinstance(c, OBDCommand):
-            return c in self.__dict__.values()
-        else:
-            logger.debug("has_command() only accepts OBDCommand objects", True)
-            return False
+    def has_command(self, cmd):
+        """
+        Check if command exists.
+        """
+        if not isinstance(cmd, OBDCommand):
+            raise TypeError('Command should be OBDCommand instance')
+        return c in self.__dict__.values()
 
 
-    def has_name(self, s):
-        """ checks for existance of a command by name """
-        if isinstance(s, str) or isinstance(s, unicode):
-            return s.isupper() and (s in self.__dict__.keys())
-        else:
-            logger.debug("has_name() only accepts string names for commands", True)
-            return False
+    def has_name(self, name):
+        """
+        Check if command with given name exists.
+        """
+        if not isinstance(name, str):
+            raise TypeError('Command name should be string')
+        return name.isupper() and (name in self.__dict__)
 
 
     def has_pid(self, mode, pid):
-        """ checks for existance of a command by int mode and int pid """
-        if isinstance(mode, int) and isinstance(pid, int):
-            if (mode < 0) or (pid < 0):
-                return False
-            if mode >= len(self.modes):
-                return False
-            if pid >= len(self.modes[mode]):
-                return False
-            return True
-        else:
-            logger.debug("has_pid() only accepts integer values for mode and PID", True)
+        """
+        Checks if command exists using mode and pid.
+        """
+        if not isinstance(mode, int) or not isinstance(pid, int):
+            raise TypeError('Mode and pid should be integer values')
+
+        if mode < 0 or pid < 0:
             return False
+        if mode >= len(self.modes):
+            return False
+        if pid >= len(self.modes[mode]):
+            return False
+        return True
 
 
 # export this object
 commands = Commands()
+
+# vim: sw=4:et:ai
