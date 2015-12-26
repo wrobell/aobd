@@ -76,8 +76,9 @@ dev = aobd.OBD(args.device)
 try:
     task = commands(dev)
     items = loop.run_until_complete(task)
+    fmt = '{}{}: {:20s} {}'.format
     for c in items:
-        print(str(c))
+        print(fmt(c.mode.decode(), c.pid.decode(), c.name, c.desc))
 finally:
     dev.close()
    
