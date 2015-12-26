@@ -31,11 +31,10 @@ import struct
 
 import aobd
 
-logger = logging.getLogger('aobd')
-
-fmt = '{}:%(asctime)s:%(levelname)s:%(name)s:%(thread)s:%(message)s' \
+LOG_FMT = '{}:%(asctime)s:%(levelname)s:%(name)s:%(thread)s:%(message)s' \
     .format(platform.node())
-logging.basicConfig(format=fmt)
+
+logger = logging.getLogger('aobd')
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -58,15 +57,14 @@ parser.add_argument(
 args = parser.parse_args()
 
 if args.verbose:
+    logging.basicConfig(format=LOG_FMT)
     logger.setLevel(logging.DEBUG)
 
 if args.log:
     elm327_log = logging.getLogger('aobd.elm327')
     elm327_log.setLevel(logging.DEBUG)
-    elm327_log.propagate = False
-
     handler = logging.FileHandler(args.log)
-    handler.setFormatter(logging.Formatter(fmt))
+    handler.setFormatter(logging.Formatter(LOG_FMT))
 
     elm327_log.addHandler(handler)
 
