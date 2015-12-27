@@ -175,6 +175,7 @@ f = h5py.File(fn, 'w')
 loop = asyncio.get_event_loop()
 dlog = n23.DLog(f, args.interval, n_chunk=60, debug=True)
 scheduler = n23.Scheduler(args.interval, timeout=0.9)
+scheduler.add_observer(dlog.notify)
 scheduler.debug = dlog
 
 obd_dev = None
