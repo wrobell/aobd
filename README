@@ -47,6 +47,9 @@ aobd-reader
     Read data from vehicle diagnostics port.
 aobd-recorder
     Save data from vehicle diagnostics port and GPS into HDF file.
+aobd-replay
+    Replay data sent to serial device from log file created by
+    `aobd-reader` or `aobd-list` command-line tools.
 
 Examples::
 
