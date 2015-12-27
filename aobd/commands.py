@@ -212,11 +212,6 @@ class Commands():
         return sum(len(m) for m in self.modes)
 
 
-    def __contains__(self, s):
-        """ calls has_name(s) """
-        return self.has_name(s)
-
-
     def pid_getters(self):
         """
         Get list of PID GET commands.
@@ -243,15 +238,6 @@ class Commands():
         if not isinstance(cmd, OBDCommand):
             raise TypeError('Command should be OBDCommand instance')
         return c in self.__dict__.values()
-
-
-    def has_name(self, name):
-        """
-        Check if command with given name exists.
-        """
-        if not isinstance(name, str):
-            raise TypeError('Command name should be string')
-        return name.isupper() and (name in self.__dict__)
 
 
     def has_pid(self, mode, pid):
