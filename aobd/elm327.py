@@ -115,7 +115,7 @@ class ELM327:
 #            if self._version >= '1.3':
 #                r = await self._send(b'ATS0')
 #                if not self.__isok(r, expectEcho=True):
-#                    raise OBDError('ATE0 did not return OK')
+#                    raise OBDError('ATS0 did not return OK')
 
         # -------------------------- ATE0 (echo OFF) --------------------------
         r = await self._send(b'ATE0')
