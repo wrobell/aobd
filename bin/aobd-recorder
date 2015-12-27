@@ -68,7 +68,7 @@ import struct
 
 import aobd
 
-GPS_DATA_ATTR = operator.itemgetter('lon', 'lat')
+GPS_DATA_ATTR = operator.itemgetter('lon', 'lat', 'alt')
 
 LOG_FMT = '{}:%(asctime)s:%(levelname)s:%(name)s:%(thread)s:%(message)s' \
     .format(platform.node())
@@ -144,7 +144,7 @@ async def gps_connect(gps_port, scheduler, dlog, attr_names):
 async def gps_read(dev):
     line = await dev.readline()
     data = json.loads(line.decode())
-    return GPS_DATA_ATTR(data) if 'lon' in data else None
+    return GPS_DATA_ATTR(data) if data.get('mode') == 3 else None
 
 
 @n23.coroutine
@@ -163,7 +163,7 @@ def data_split(names, target):
 
 
 obd_commands = [getattr(aobd.commands, c.upper()) for c in args.commands]
-gps_attr_names = ['longitude', 'latitude']
+gps_attr_names = ['longitude', 'latitude', 'altitude']
 
 if os.path.isdir(args.file):
     fn = next(n23.dlog_filename('aobd', args.file))
