@@ -165,10 +165,9 @@ class OBDIterator:
         return self
 
     async def __anext__(self):
-        try:
-            cmd = next(self.commands)
-        except StopIteration:
-            raise StopAsyncIteration
+        cmd = next(self.commands, None)
+        if not cmd:
+            raise StopAsyncIteration()
 
         msg = await self.port.query(cmd.get_command())
         return Response() if msg is None else cmd(msg)
