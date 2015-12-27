@@ -112,10 +112,10 @@ class ELM327:
         self._version = self._parse_version(r)
         if self._version:
             logger.info('version detected: {}'.format(self._version))
-#            if self._version >= '1.3':
-#                r = await self._send(b'ATS0')
-#                if not self.__isok(r, expectEcho=True):
-#                    raise OBDError('ATS0 did not return OK')
+            if self._version >= '1.3':
+                r = await self._send(b'ATS0')
+                if not self.__isok(r, expectEcho=True):
+                    raise OBDError('ATS0 did not return OK')
 
         # -------------------------- ATE0 (echo OFF) --------------------------
         r = await self._send(b'ATE0')
