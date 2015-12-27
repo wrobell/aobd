@@ -61,6 +61,7 @@ import json
 import h5py
 import n23
 import operator
+import os.path
 import logging
 import platform
 import struct
@@ -164,8 +165,14 @@ def data_split(names, target):
 obd_commands = [getattr(aobd.commands, c.upper()) for c in args.commands]
 gps_attr_names = ['longitude', 'latitude']
 
+if os.path.isdir(args.file):
+    fn = next(n23.dlog_filename('aobd', args.file))
+else:
+    fn = args.file
+
+f = h5py.File(fn, 'w')
+
 loop = asyncio.get_event_loop()
-f = h5py.File(args.file, 'w')
 dlog = n23.DLog(f, args.interval, n_chunk=60, debug=True)
 scheduler = n23.Scheduler(args.interval, timeout=0.9)
 scheduler.debug = dlog
