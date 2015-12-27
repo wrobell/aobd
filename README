@@ -39,7 +39,16 @@ Example of reading vehicle RPM::
     dev = aobd.OBD('/dev/PORT')
     loop.run_until_complete(reader(dev))
 
-Command-line tools allow to list available commands and read data::
+Command-line tools implemented
+
+aobd-list
+    List commands supported by vehicle diagnostics port.
+aobd-reader
+    Read data from vehicle diagnostics port.
+aobd-recorder
+    Save data from vehicle diagnostics port and GPS into HDF file.
+
+Examples::
 
     $ PYTHONPATH=. ./bin/aobd-list /dev/PORT
     0101: STATUS               Status since DTCs cleared

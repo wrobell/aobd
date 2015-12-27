@@ -1,0 +1,192 @@
+#!/usr/bin/env python3
+#
+# aobd - vehicle on-board diagnostics library
+#
+# Copyright (C) 2015 by Artur Wroblewski <wrobell@pld-linux.org>
+#
+# Copyright 2004 Donour Sizemore (donour@uchicago.edu)
+# Copyright 2009 Secons Ltd. (www.obdtester.com)
+# Copyright 2009 Peter J. Creath
+# Copyright 2015 Brendan Whitfield (bcw7044@rit.edu)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+"""
+Vehicle diagnostic and GPS data recorder.
+
+Requirements
+
+- `n23 <https://bitbucket.org/wrobell/n23>`_
+- `gpsd <http://www.catb.org/gpsd/>`_
+
+The data is saved in HDF file.
+
+Example::
+
+    $ aobd-recorder /dev/PORT data.hdf rpm throttle_pos speed
+
+    # press C-C to stop recording
+
+    # 7s of data
+    $ h5ls -r data.hdf
+    /                        Group
+    /_debug_                 Group
+    /_debug_/clock_time      Dataset {7/Inf}
+    /_debug_/duration        Dataset {7/Inf}
+    /_debug_/read_time       Dataset {7/Inf}
+    /latitude                Dataset {7/Inf}
+    /longitude               Dataset {7/Inf}
+    /rpm                     Dataset {7/Inf}
+    /speed                   Dataset {7/Inf}
+    /throttle_pos            Dataset {7/Inf}
+
+"""
+
+import argparse
+import asyncio
+import functools
+import json
+import h5py
+import n23
+import operator
+import logging
+import platform
+import struct
+
+import aobd
+
+GPS_DATA_ATTR = operator.itemgetter('lon', 'lat')
+
+LOG_FMT = '{}:%(asctime)s:%(levelname)s:%(name)s:%(thread)s:%(message)s' \
+    .format(platform.node())
+
+logger = logging.getLogger()
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '-v', '--verbose', action='store_true', dest='verbose', default=False,
+    help='explain what is being done'
+)
+parser.add_argument(
+    '-i', '--interval', dest='interval', default=1, type=float,
+        help='read interval'
+)
+parser.add_argument(
+    '-p', '--gps-port', dest='gps_port', default=2947, type=int,
+        help='gpsd port number'
+)
+parser.add_argument('device', help='serial device')
+parser.add_argument('file', help='data log file or directory')
+parser.add_argument(
+    'commands', nargs='*', default=['RPM'],
+    help='diagnostic command to read'
+)
+args = parser.parse_args()
+
+if args.verbose:
+    logging.basicConfig(format=LOG_FMT)
+    logger.setLevel(logging.DEBUG)
+
+
+async def obd_connect(dev_name, scheduler, dlog, commands):
+    dev = aobd.OBD(dev_name)
+    logger.info('connecting to OBD device: '.format(dev_name))
+    await dev.connect()
+
+    names = [cmd.name.lower() for cmd in commands]
+    for n in names:
+        dlog.add(n)
+
+    read = functools.partial(obd_read, dev, commands)
+    workflow = data_split(names, dlog)
+    scheduler.add('obd', read, workflow)
+    return dev
+
+
+async def obd_read(dev, commands):
+    values = []
+    async for response in dev.query(commands):
+        values.append(response.value)
+    return values
+
+
+async def gps_connect(gps_port, scheduler, dlog, attr_names):
+    logger.info('connecting to GPS device')
+
+    reader, writer = await asyncio.open_connection(port=gps_port)
+    writer.write('?WATCH={"enable":true,"json":true}\n'.encode())
+
+    logger.info('GPS connected')
+
+    for n in attr_names:
+        dlog.add(n)
+
+    read = functools.partial(gps_read, reader)
+    workflow = data_split(attr_names, dlog)
+
+    scheduler.add('gps', read, workflow)
+    return reader, writer
+
+
+async def gps_read(dev):
+    line = await dev.readline()
+    data = json.loads(line.decode())
+    return GPS_DATA_ATTR(data) if 'lon' in data else None
+
+
+@n23.coroutine
+def data_split(names, target):
+    while True:
+        item = yield
+
+        logger.debug('got {}'.format(item))
+        if item.value is None:
+            continue
+
+        assert len(names) == len(item.value), '{} <=> {}'.format(names, item)
+        for name, value in zip(names, item.value):
+            v = item._replace(name=name, value=value)
+            target(v)
+
+
+obd_commands = [getattr(aobd.commands, c.upper()) for c in args.commands]
+gps_attr_names = ['longitude', 'latitude']
+
+loop = asyncio.get_event_loop()
+f = h5py.File(args.file, 'w')
+dlog = n23.DLog(f, args.interval, n_chunk=60, debug=True)
+scheduler = n23.Scheduler(args.interval, timeout=0.9)
+scheduler.debug = dlog
+
+obd_dev = None
+gps_dev = None
+try:
+    tasks = [
+        obd_connect(args.device, scheduler, dlog, obd_commands),
+        gps_connect(args.gps_port, scheduler, dlog, gps_attr_names),
+    ]
+    obd_dev, gps_dev = loop.run_until_complete(asyncio.gather(*tasks))
+    logger.info('gps and obd connections established')
+    loop.run_until_complete(scheduler)
+finally:
+    if obd_dev is not None:
+        obd_dev.close()
+    if gps_dev is not None:
+        gps_dev[1].close() # (reader, writer) pair
+    scheduler.close()
+    dlog.close()
+    f.close()
+
+# vim: sw=4:et:ai
