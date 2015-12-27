@@ -43,6 +43,7 @@ TIMEOUT = 30
 #
 RE_CLEAN = re.compile(b'[\x00>]')
 RE_SPLIT = re.compile(b'[\r\n]')
+RE_VERSION = re.compile('v(\d+.\d+[a-z]?)')
 
 clean_data = functools.partial(RE_CLEAN.sub, b'')
 split_data = RE_SPLIT.split
@@ -81,6 +82,7 @@ class ELM327:
         self.__port        = None
         self.__protocol    = None
         self.__primary_ecu = None # message.tx_id
+        self._version = None
 
         # ------------- open port -------------
 
@@ -106,8 +108,14 @@ class ELM327:
 
     async def connect(self):
         # ---------------------------- ATZ (reset) ----------------------------
-        await self._send(b'ATZ') # wait 1 second for ELM to initialize
-        # return data can be junk, so don't bother checking
+        r = await self._send(b'ATZ') # wait 1 second for ELM to initialize
+        self._version = self._parse_version(r)
+        if self._version:
+            logger.info('version detected: {}'.format(self._version))
+#            if self._version >= '1.3':
+#                r = await self._send(b'ATS0')
+#                if not self.__isok(r, expectEcho=True):
+#                    raise OBDError('ATE0 did not return OK')
 
         # -------------------------- ATE0 (echo OFF) --------------------------
         r = await self._send(b'ATE0')
@@ -157,6 +165,13 @@ class ELM327:
 
         logger.info('connection successful')
         self.__connected = True
+
+
+    def _parse_version(self, data):
+        items = (RE_VERSION.findall(s) for s in data)
+        items = (v for v in items if v)
+        version = next(items, None)
+        return version[0] if version else None
 
 
     def __isok(self, lines, expectEcho=False):
