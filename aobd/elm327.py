@@ -130,38 +130,32 @@ class ELM327:
             raise OBDError("ATSPA8 did not return 'OK'")
 
         # -------------- 0100 (first command, SEARCH protocols) --------------
-        # TODO: rewrite this using a "wait for prompt character"
-        # rather than a fixed wait period
         r0100 = await self._send(b'0100')
 
         # ------------------- ATDPN (list protocol number) -------------------
         r = await self._send(b'ATDPN')
-
         if not r:
-            raise OBDError("Describe protocol command didn't return ")
+            raise OBDError('No data from "protocol by number" command')
 
         p = r[0]
 
         # suppress any "automatic" prefix
-        p = p[1:] if (len(p) > 1 and p.startswith("A")) else p[:-1]
-
+        p = p[1:] if len(p) > 1 and p.startswith('A') else p[:-1]
         logger.info('protocol id: {}'.format(p))
         if p not in self._SUPPORTED_PROTOCOLS:
-            raise OBDError("ELM responded with unknown protocol")
+            raise OBDError('Unknown protocol: {}'.format(p))
 
         # instantiate the correct protocol handler
         self.__protocol = self._SUPPORTED_PROTOCOLS[p]()
 
         # Now that a protocol has been selected, we can figure out
         # which ECU is the primary.
-
         m = self.__protocol(r0100)
         self.__primary_ecu = self.__find_primary_ecu(m)
         if self.__primary_ecu is None:
-            raise OBDError("Failed to choose primary ECU")
+            raise OBDError('Failed to choose primary ECU')
 
-        # ------------------------------- done -------------------------------
-        logger.debug("Connection successful")
+        logger.info('connection successful')
         self.__connected = True
 
 
