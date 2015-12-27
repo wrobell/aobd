@@ -182,9 +182,7 @@ class Commands():
         ]
 
         # allow commands to be accessed by sensor name
-        for m in self.modes:
-            for c in m:
-                self.__dict__[c.name] = c
+        self.__dict__.update({c.name: c for m in self.modes for c in m})
 
 
     def __getitem__(self, key):
