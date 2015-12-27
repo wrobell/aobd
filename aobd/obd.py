@@ -156,13 +156,16 @@ class OBD:
         logger.info('number of commands supported: {}'.format(n))
 
 
+
 class OBDIterator:
     def __init__(self, port, commands):
         self.port = port
         self.commands = iter(commands)
 
+
     async def __aiter__(self):
         return self
+
 
     async def __anext__(self):
         cmd = next(self.commands, None)
