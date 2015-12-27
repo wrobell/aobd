@@ -121,18 +121,22 @@ class OBD:
         """
         logger.debug('querying for supported PIDs (commands)...')
 
-        # PID listing commands should sequentialy become supported
         # Mode 1 PID 0 is assumed to always be supported
-        data = commands.pid_getters()
-        pid_getters = set(data)
-        data = (p for p in data if self.supports(p))
+        pid_cmds = commands.pid_getters()
         responses = []
-        for get in data:
-            response = await self.query(get)
-            responses.append((get, response))
+        for p in pid_cmds:
+            r = await self.query(p)
+            responses.append((p, r.value)) # if no response, then fail hard
+            logger.debug('pid response: {}'.format(r.value))
 
-        # r.value is string of binary 01010101010101
-        responses = ((p, r.value) for p, r in responses if not r.is_null())
+            # r.value is string of 32 bits,
+            # i.e.: 10111110001111101011100000010000
+            assert len(r.value) == 32
+
+            # if next pid not supported, bail out
+            if r.value[-1] == '0':
+                break
+
         items = (
             (p.get_mode_int(), p.get_pid_int() + i + 1)
             for p, v in responses
@@ -142,8 +146,8 @@ class OBD:
             commands[mode][pid] for mode, pid in items
             if commands.has_pid(mode, pid)
         )
-        # don't add PID getters to the command list
-        items = tuple(c for c in items if c not in pid_getters)
+        # skip PID commands
+        items = tuple(c for c in items if c not in pid_cmds)
         for c in items:
             c.supported = True
         self._commands = items
