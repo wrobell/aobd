@@ -1,10 +1,34 @@
+#
+# aobd - vehicle on-board diagnostics library
+#
+# Copyright (C) 2015 by Artur Wroblewski <wrobell@pld-linux.org>
+#
+# Copyright 2004 Donour Sizemore (donour@uchicago.edu)
+# Copyright 2009 Secons Ltd. (www.obdtester.com)
+# Copyright 2009 Peter J. Creath
+# Copyright 2015 Brendan Whitfield (bcw7044@rit.edu)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 
 import aobd
 from aobd.decoders import pid
 
 
 def test_list_integrity():
-    for mode, cmds in enumerate(aobd.commands.modes):
+    for mode, cmds in enumerate(aobd.commands._modes):
         for pid, cmd in enumerate(cmds):
 
             # make sure the command tables are in mode & PID order
@@ -26,7 +50,7 @@ def test_unique_names():
     # make sure no two commands have the same name
     names = {}
 
-    for cmds in aobd.commands.modes:
+    for cmds in aobd.commands._modes:
         for cmd in cmds:
             assert not names.__contains__(cmd.name), "Two commands share the same name: %s" % cmd.name
             names[cmd.name] = True
@@ -34,13 +58,13 @@ def test_unique_names():
 
 def test_getitem():
     # ensure that __getitem__ works correctly
-    for cmds in aobd.commands.modes:
+    for cmds in aobd.commands._modes:
         for cmd in cmds:
 
             # by [mode][pid]
             mode = cmd.get_mode_int()
             pid  = cmd.get_pid_int()
-            assert cmd == aobd.commands[mode][pid], "mode %d, PID %d could not be accessed through __getitem__" % (mode, pid)
+            assert cmd == aobd.commands[mode, pid], "mode %d, PID %d could not be accessed through __getitem__" % (mode, pid)
 
             # by [name]
             assert cmd == aobd.commands[cmd.name], "command name %s could not be accessed through __getitem__" % (cmd.name)
@@ -48,26 +72,26 @@ def test_getitem():
 
 def test_contains():
 
-    for cmds in aobd.commands.modes:
+    for cmds in aobd.commands._modes:
         for cmd in cmds:
 
             # by (command)
-            assert aobd.commands.has_command(cmd)
+            assert cmd in aobd.commands
 
             # by (mode, pid)
             mode = cmd.get_mode_int()
             pid  = cmd.get_pid_int()
-            assert aobd.commands.has_pid(mode, pid)
+            assert (mode, pid) in aobd.commands
 
             # by (name)
-            assert hasattr(aobd.commands, cmd.name)
+            assert cmd.name in aobd.commands
 
     # test things NOT in the tables, or invalid parameters
-    assert 'modes' not in aobd.commands
-    assert not aobd.commands.has_pid(-1, 0)
-    assert not aobd.commands.has_pid(1, -1)
+    assert '_modes' not in aobd.commands
+    assert (-1, 0) not in aobd.commands
+    assert (1, -1) not in aobd.commands
     try:
-        aobd.commands.has_command('string, not OBDCommand')
+        [] in aobd.commands
         assert False, 'TypeError expected'
     except TypeError:
         pass
@@ -75,9 +99,9 @@ def test_contains():
 
 def test_pid_getters():
     # ensure that all pid getters are found
-    pid_getters = aobd.commands.pid_getters()
+    pid_getters = aobd.commands.pid_commands()
 
-    for cmds in aobd.commands.modes:
+    for cmds in aobd.commands._modes:
         for cmd in cmds:
             if cmd.decode == pid:
                 assert cmd in pid_getters

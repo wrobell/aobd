@@ -98,7 +98,7 @@ class OBD:
 
     def supports(self, cmd):
         """ Returns a boolean for whether the car supports the given command """
-        return commands.has_command(cmd) and cmd.supported
+        return cmd in commands and cmd.supported
 
 
     @property
@@ -119,10 +119,10 @@ class OBD:
         Check if each PID available, set its support status and create
         collection of supported command objects.
         """
-        logger.debug('querying for supported PIDs (commands)...')
+        logger.debug('querying for supported PID commands...')
 
         # Mode 1 PID 0 is assumed to always be supported
-        pid_cmds = commands.pid_getters()
+        pid_cmds = commands.pid_commands()
         responses = []
         for p in pid_cmds:
             r = await self.query(p)
@@ -143,8 +143,8 @@ class OBD:
             for i, s in enumerate(v) if s == '1'
         )
         items = (
-            commands[mode][pid] for mode, pid in items
-            if commands.has_pid(mode, pid)
+            commands[mode, pid] for mode, pid in items
+            if (mode, pid) in commands
         )
         # skip PID commands
         items = tuple(c for c in items if c not in pid_cmds)

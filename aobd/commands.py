@@ -165,12 +165,14 @@ __mode7__ = [
 
 
 
-# assemble the command tables by mode, and allow access by sensor name
 class Commands():
+    """
+    All OBD commands exposed via name or tuple (mode, pid).
+    """
     def __init__(self):
 
         # allow commands to be accessed by mode and PID
-        self.modes = [
+        self._modes = [
             [],
             __mode1__,
             __mode2__,
@@ -182,60 +184,70 @@ class Commands():
         ]
 
         # allow commands to be accessed by sensor name
-        self.__dict__.update({c.name: c for m in self.modes for c in m})
+        self.__dict__.update({c.name: c for m in self._modes for c in m})
+
+
+    def __contains__(self, key): # FIXME: use signledispatch
+        """
+        Checks if command exists using mode and pid.
+        """
+        if not isinstance(key, (str, tuple, OBDCommand)):
+            raise TypeError(
+                'OBD command should be string, tuple of two integers or OBDCommand'
+            )
+
+        if isinstance(key, tuple) and (
+                not isinstance(key[0], int) or not isinstance(key[1], int)
+        ):
+            raise TypeError('Mode and pid should be integer values')
+
+        if isinstance(key, str):
+            return not key.startswith('_') and key in self.__dict__
+
+        if isinstance(key, OBDCommand):
+            return key in self.__dict__.values()
+
+        mode, pid = key
+        modes = self._modes
+        return 0 <= mode < len(modes) and 0 <= pid < len(modes[mode])
 
 
     def __getitem__(self, key):
         """
-        Get command by name or (mode, pid).
+        Get command by name or (mode, pid) tuple.
 
         For example::
 
             obd.commands.RPM
-            obd.commands["RPM"]
-            obd.commands[1][12] # mode 1, PID 12 (RPM)
+            obd.commands['RPM']
+            obd.commands[1, 12] # mode 1, PID 12 (RPM)
 
         """
 
-        if isinstance(key, int):
-            return self.modes[key]
-        elif isinstance(key, str) or isinstance(key, unicode):
+        if isinstance(key, tuple):
+            return self._modes[key[0]][key[1]]
+        elif isinstance(key, str):
             return self.__dict__[key]
         else:
-            raise TypeError('OBD command can be retrieved by name or PID value')
+            raise TypeError(
+                'OBD command key should be string or (mode, pd) tuple'
+            )
 
 
     def __len__(self):
         """
         Return number of supported commands.
         """
-        return sum(len(m) for m in self.modes)
+        return sum(len(m) for m in self._modes)
 
 
-    def pid_getters(self):
+    def pid_commands(self):
         """
         Get list of PID GET commands.
         """
         # pid: GET commands have a special decoder
-        return [c for m in self.modes for c in m if c.decode == pid]
+        return [c for m in self._modes for c in m if c.decode == pid]
 
-
-    def has_command(self, cmd):
-        """
-        Check if command exists.
-        """
-        if not isinstance(cmd, OBDCommand):
-            raise TypeError('Command should be OBDCommand instance')
-        return c in self.__dict__.values()
-
-
-    def has_pid(self, mode, pid):
-        """
-        Checks if command exists using mode and pid.
-        """
-        if not isinstance(mode, int) or not isinstance(pid, int):
-            raise TypeError('Mode and pid should be integer values')
-        return 0 <= mode < len(self.modes) and 0 <= pid < len(self.modes[mode])
 
 
 # export this object
