@@ -27,7 +27,6 @@ import argparse
 import asyncio
 import logging
 import platform
-import struct
 
 import aobd
 
@@ -47,7 +46,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '-i', '--interval', dest='interval', default=1, type=float,
-        help='read interval'
+    help='read interval'
 )
 parser.add_argument('device', help='serial device')
 parser.add_argument(
@@ -88,5 +87,5 @@ try:
     loop.run_until_complete(task)
 finally:
     dev.close()
-   
+
 # vim: sw=4:et:ai
