@@ -220,17 +220,6 @@ class Commands():
         return [c for m in self.modes for c in m if c.decode == pid]
 
 
-    def set_supported(self, mode, pid, value):
-        """
-        Set the supported flag for the given command.
-        """
-        if not isinstance(v, bool):
-            raise TypeError('Value should be boolean')
-
-        if self.has(mode, pid):
-            self.modes[mode][pid].supported = value
-
-
     def has_command(self, cmd):
         """
         Check if command exists.
