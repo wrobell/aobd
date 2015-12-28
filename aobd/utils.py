@@ -112,7 +112,7 @@ def numBitsSet(n):
     return total
 
 def unhex(_hex):
-    _hex = "0" if _hex == "" else _hex
+    _hex = '0' if _hex == b'' else _hex
     return int(_hex, 16)
 
 def unbin(_bin):

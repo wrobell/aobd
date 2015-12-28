@@ -1,10 +1,10 @@
 
-import obd
-from obd.decoders import pid
+import aobd
+from aobd.decoders import pid
 
 
 def test_list_integrity():
-	for mode, cmds in enumerate(obd.commands.modes):
+	for mode, cmds in enumerate(aobd.commands.modes):
 		for pid, cmd in enumerate(cmds):
 
 			# make sure the command tables are in mode & PID order
@@ -26,7 +26,7 @@ def test_unique_names():
 	# make sure no two commands have the same name
 	names = {}
 
-	for cmds in obd.commands.modes:
+	for cmds in aobd.commands.modes:
 		for cmd in cmds:
 			assert not names.__contains__(cmd.name), "Two commands share the same name: %s" % cmd.name
 			names[cmd.name] = True
@@ -34,49 +34,50 @@ def test_unique_names():
 
 def test_getitem():
 	# ensure that __getitem__ works correctly
-	for cmds in obd.commands.modes:
+	for cmds in aobd.commands.modes:
 		for cmd in cmds:
 
 			# by [mode][pid]
 			mode = cmd.get_mode_int()
 			pid  = cmd.get_pid_int()
-			assert cmd == obd.commands[mode][pid], "mode %d, PID %d could not be accessed through __getitem__" % (mode, pid)
+			assert cmd == aobd.commands[mode][pid], "mode %d, PID %d could not be accessed through __getitem__" % (mode, pid)
 
 			# by [name]
-			assert cmd == obd.commands[cmd.name], "command name %s could not be accessed through __getitem__" % (cmd.name)
+			assert cmd == aobd.commands[cmd.name], "command name %s could not be accessed through __getitem__" % (cmd.name)
 
 
 def test_contains():
 
-	for cmds in obd.commands.modes:
+	for cmds in aobd.commands.modes:
 		for cmd in cmds:
 
 			# by (command)
-			assert obd.commands.has_command(cmd)
+			assert aobd.commands.has_command(cmd)
 
 			# by (mode, pid)
 			mode = cmd.get_mode_int()
 			pid  = cmd.get_pid_int()
-			assert obd.commands.has_pid(mode, pid)
+			assert aobd.commands.has_pid(mode, pid)
 
 			# by (name)
-			assert obd.commands.has_name(cmd.name)
-
-			# by `in`
-			assert cmd.name in obd.commands
+			assert hasattr(aobd.commands, cmd.name)
 
 	# test things NOT in the tables, or invalid parameters
-	assert 'modes' not in obd.commands
-	assert not obd.commands.has_pid(-1, 0)
-	assert not obd.commands.has_pid(1, -1)
-	assert not obd.commands.has_command("I'm a string, not an OBDCommand")
+	assert 'modes' not in aobd.commands
+	assert not aobd.commands.has_pid(-1, 0)
+	assert not aobd.commands.has_pid(1, -1)
+	try:
+		aobd.commands.has_command('string, not OBDCommand')
+		assert False, 'TypeError expected'
+	except TypeError:
+		pass
 
 
 def test_pid_getters():
 	# ensure that all pid getters are found
-	pid_getters = obd.commands.pid_getters()
+	pid_getters = aobd.commands.pid_getters()
 
-	for cmds in obd.commands.modes:
+	for cmds in aobd.commands.modes:
 		for cmd in cmds:
 			if cmd.decode == pid:
 				assert cmd in pid_getters
