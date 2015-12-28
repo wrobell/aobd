@@ -46,6 +46,7 @@ Example::
     /_debug_/clock_time      Dataset {7/Inf}
     /_debug_/duration        Dataset {7/Inf}
     /_debug_/read_time       Dataset {7/Inf}
+    /altitude                Dataset {7/Inf}
     /latitude                Dataset {7/Inf}
     /longitude               Dataset {7/Inf}
     /rpm                     Dataset {7/Inf}
