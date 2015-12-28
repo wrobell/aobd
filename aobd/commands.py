@@ -235,14 +235,7 @@ class Commands():
         """
         if not isinstance(mode, int) or not isinstance(pid, int):
             raise TypeError('Mode and pid should be integer values')
-
-        if mode < 0 or pid < 0:
-            return False
-        if mode >= len(self.modes):
-            return False
-        if pid >= len(self.modes[mode]):
-            return False
-        return True
+        return 0 <= mode < len(self.modes) and 0 <= pid < len(self.modes[mode])
 
 
 # export this object
