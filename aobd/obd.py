@@ -29,7 +29,7 @@ import time
 
 from .__version__ import __version__
 from .elm327 import ELM327, OBDError
-from .commands import commands
+from .commands import COMMANDS
 from .obdcmd import OBDCommand
 from .utils import Response
 
@@ -98,7 +98,7 @@ class OBD:
 
     def supports(self, cmd):
         """ Returns a boolean for whether the car supports the given command """
-        return cmd in commands and cmd.supported
+        return cmd in COMMANDS and cmd.supported
 
 
     @property
@@ -122,7 +122,7 @@ class OBD:
         logger.debug('querying for supported PID commands...')
 
         # Mode 1 PID 0 is assumed to always be supported
-        pid_cmds = commands.pid_commands()
+        pid_cmds = COMMANDS.pid_commands()
         responses = []
         for p in pid_cmds:
             r = await self.query(p)
@@ -143,8 +143,8 @@ class OBD:
             for i, s in enumerate(v) if s == '1'
         )
         items = (
-            commands[mode, pid] for mode, pid in items
-            if (mode, pid) in commands
+            COMMANDS[mode, pid] for mode, pid in items
+            if (mode, pid) in COMMANDS
         )
         # skip PID commands
         items = tuple(c for c in items if c not in pid_cmds)

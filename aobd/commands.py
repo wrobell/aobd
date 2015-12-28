@@ -259,7 +259,6 @@ class Commands():
 
 
 
-# export this object
-commands = Commands()
+COMMANDS = Commands()
 
 # vim: sw=4:et:ai

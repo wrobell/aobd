@@ -28,7 +28,7 @@ from aobd.decoders import pid
 
 
 def test_list_integrity():
-    for mode, cmds in enumerate(aobd.commands._modes):
+    for mode, cmds in enumerate(aobd.COMMANDS._modes):
         for pid, cmd in enumerate(cmds):
 
             # make sure the command tables are in mode & PID order
@@ -50,7 +50,7 @@ def test_unique_names():
     # make sure no two commands have the same name
     names = {}
 
-    for cmds in aobd.commands._modes:
+    for cmds in aobd.COMMANDS._modes:
         for cmd in cmds:
             assert not names.__contains__(cmd.name), "Two commands share the same name: %s" % cmd.name
             names[cmd.name] = True
@@ -58,40 +58,40 @@ def test_unique_names():
 
 def test_getitem():
     # ensure that __getitem__ works correctly
-    for cmds in aobd.commands._modes:
+    for cmds in aobd.COMMANDS._modes:
         for cmd in cmds:
 
             # by [mode][pid]
             mode = cmd.get_mode_int()
             pid  = cmd.get_pid_int()
-            assert cmd == aobd.commands[mode, pid], "mode %d, PID %d could not be accessed through __getitem__" % (mode, pid)
+            assert cmd == aobd.COMMANDS[mode, pid], "mode %d, PID %d could not be accessed through __getitem__" % (mode, pid)
 
             # by [name]
-            assert cmd == aobd.commands[cmd.name], "command name %s could not be accessed through __getitem__" % (cmd.name)
+            assert cmd == aobd.COMMANDS[cmd.name], "command name %s could not be accessed through __getitem__" % (cmd.name)
 
 
 def test_contains():
 
-    for cmds in aobd.commands._modes:
+    for cmds in aobd.COMMANDS._modes:
         for cmd in cmds:
 
             # by (command)
-            assert cmd in aobd.commands
+            assert cmd in aobd.COMMANDS
 
             # by (mode, pid)
             mode = cmd.get_mode_int()
             pid  = cmd.get_pid_int()
-            assert (mode, pid) in aobd.commands
+            assert (mode, pid) in aobd.COMMANDS
 
             # by (name)
-            assert cmd.name in aobd.commands
+            assert cmd.name in aobd.COMMANDS
 
     # test things NOT in the tables, or invalid parameters
-    assert '_modes' not in aobd.commands
-    assert (-1, 0) not in aobd.commands
-    assert (1, -1) not in aobd.commands
+    assert '_modes' not in aobd.COMMANDS
+    assert (-1, 0) not in aobd.COMMANDS
+    assert (1, -1) not in aobd.COMMANDS
     try:
-        [] in aobd.commands
+        [] in aobd.COMMANDS
         assert False, 'TypeError expected'
     except TypeError:
         pass
@@ -99,9 +99,9 @@ def test_contains():
 
 def test_pid_getters():
     # ensure that all pid getters are found
-    pid_getters = aobd.commands.pid_commands()
+    pid_getters = aobd.COMMANDS.pid_commands()
 
-    for cmds in aobd.commands._modes:
+    for cmds in aobd.COMMANDS._modes:
         for cmd in cmds:
             if cmd.decode == pid:
                 assert cmd in pid_getters

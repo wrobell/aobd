@@ -79,7 +79,7 @@ async def reader(dev, commands, interval):
         await asyncio.sleep(interval)
 
 
-commands = [getattr(aobd.commands, c.upper()) for c in args.commands]
+commands = [getattr(aobd.COMMANDS, c.upper()) for c in args.commands]
 loop = asyncio.get_event_loop()
 dev = aobd.OBD(args.device)
 try:

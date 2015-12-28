@@ -161,7 +161,7 @@ def data_split(names, target):
             target(v)
 
 
-obd_commands = [getattr(aobd.commands, c.upper()) for c in args.commands]
+obd_commands = [getattr(aobd.COMMANDS, c.upper()) for c in args.commands]
 gps_attr_names = ['longitude', 'latitude', 'altitude']
 
 if os.path.isdir(args.file):
