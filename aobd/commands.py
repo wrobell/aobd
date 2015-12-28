@@ -191,25 +191,21 @@ class Commands():
         """
         Checks if command exists using mode and pid.
         """
-        if not isinstance(key, (str, tuple, OBDCommand)):
+        if not (self._is_key(key) or isinstance(key, OBDCommand)):
             raise TypeError(
                 'OBD command should be string, tuple of two integers or OBDCommand'
             )
 
-        if isinstance(key, tuple) and (
-                not isinstance(key[0], int) or not isinstance(key[1], int)
-        ):
-            raise TypeError('Mode and pid should be integer values')
-
         if isinstance(key, str):
             return not key.startswith('_') and key in self.__dict__
 
-        if isinstance(key, OBDCommand):
-            return key in self.__dict__.values()
+        if isinstance(key, tuple):
+            mode, pid = key
+            modes = self._modes
+            return 0 <= mode < len(modes) and 0 <= pid < len(modes[mode])
 
-        mode, pid = key
-        modes = self._modes
-        return 0 <= mode < len(modes) and 0 <= pid < len(modes[mode])
+        assert isinstance(key, OBDCommand)
+        return key in self.__dict__.values()
 
 
     def __getitem__(self, key):
@@ -223,15 +219,15 @@ class Commands():
             obd.commands[1, 12] # mode 1, PID 12 (RPM)
 
         """
-
-        if isinstance(key, tuple):
-            return self._modes[key[0]][key[1]]
-        elif isinstance(key, str):
-            return self.__dict__[key]
-        else:
+        if not self._is_key(key):
             raise TypeError(
-                'OBD command key should be string or (mode, pd) tuple'
+                'OBD command key should be string or tuple of two integers'
             )
+        if isinstance(key, str):
+            return self.__dict__[key]
+
+        assert isinstance(key, tuple)
+        return self._modes[key[0]][key[1]]
 
 
     def __len__(self):
@@ -239,6 +235,15 @@ class Commands():
         Return number of supported commands.
         """
         return sum(len(m) for m in self._modes)
+
+
+    def _is_key(self, key):
+        """
+        Check if `key` is value suitable to get OBD command.
+        """
+        return isinstance(key, str) \
+            or isinstance(key, tuple) and len(key) == 2 \
+            and isinstance(key[0], int) and isinstance(key[1], int)
 
 
     def pid_commands(self):
