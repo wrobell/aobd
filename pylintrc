@@ -92,7 +92,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=80
 
 # Regexp for a line that is allowed to be longer than the limit.
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
@@ -347,7 +347,7 @@ ignored-argument-names=_.*
 max-locals=15
 
 # Maximum number of return / yield for function / method body
-max-returns=6
+max-returns=1
 
 # Maximum number of branch for function / method body
 max-branches=12
