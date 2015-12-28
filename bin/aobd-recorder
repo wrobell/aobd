@@ -64,7 +64,6 @@ import operator
 import os.path
 import logging
 import platform
-import struct
 
 import aobd
 
@@ -82,11 +81,11 @@ parser.add_argument(
 )
 parser.add_argument(
     '-i', '--interval', dest='interval', default=1, type=float,
-        help='read interval'
+    help='read interval'
 )
 parser.add_argument(
     '-p', '--gps-port', dest='gps_port', default=2947, type=int,
-        help='gpsd port number'
+    help='gpsd port number'
 )
 parser.add_argument('device', help='serial device')
 parser.add_argument('file', help='data log file or directory')
@@ -103,7 +102,7 @@ if args.verbose:
 
 async def obd_connect(dev_name, scheduler, dlog, commands):
     dev = aobd.OBD(dev_name)
-    logger.info('connecting to OBD device: '.format(dev_name))
+    logger.info('connecting to OBD device: {}'.format(dev_name))
     await dev.connect()
 
     names = [cmd.name.lower() for cmd in commands]

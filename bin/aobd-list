@@ -31,7 +31,6 @@ import argparse
 import asyncio
 import logging
 import platform
-import struct
 
 import aobd
 
@@ -83,4 +82,3 @@ finally:
     dev.close()
    
 # vim: sw=4:et:ai
-
