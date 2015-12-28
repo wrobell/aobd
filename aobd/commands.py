@@ -187,9 +187,12 @@ class Commands():
         self.__dict__.update({c.name: c for m in self._modes for c in m})
 
 
-    def __contains__(self, key): # FIXME: use signledispatch
+    def __contains__(self, key):
         """
-        Checks if command exists using mode and pid.
+        Check if command exists.
+
+        :param key: Command name string, (mode, pid) tuple or `OBDCommand`
+            instance.
         """
         if not (self._is_key(key) or isinstance(key, OBDCommand)):
             raise TypeError(
@@ -218,6 +221,7 @@ class Commands():
             obd.commands['RPM']
             obd.commands[1, 12] # mode 1, PID 12 (RPM)
 
+        :param key: Command name string, (mode, pid) tuple.
         """
         if not self._is_key(key):
             raise TypeError(
