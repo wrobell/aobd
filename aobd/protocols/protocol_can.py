@@ -30,9 +30,12 @@
 ########################################################################
 
 import binascii
+import logging
 
 from aobd.utils import contiguous
 from .protocol import *
+
+logger = logging.getLogger(__name__)
 
 
 class CANProtocol(Protocol):
@@ -97,7 +100,7 @@ class CANProtocol(Protocol):
         if frame.type not in [self.FRAME_TYPE_SF,
                               self.FRAME_TYPE_FF,
                               self.FRAME_TYPE_CF]:
-            debug("Dropping frame carrying unknown PCI frame type")
+            logger.warning('Dropping frame carrying unknown PCI frame type')
             return None
 
         if frame.type == self.FRAME_TYPE_SF:
@@ -122,11 +125,11 @@ class CANProtocol(Protocol):
             frame = frames[0]
 
             if frame.type != self.FRAME_TYPE_SF:
-                debug("Recieved lone frame not marked as single frame")
+                logger.warning('Received lone frame not marked as single frame')
                 return None
 
             # extract data, ignore PCI byte and anything after the marked length
-            message.data_bytes = frame.data_bytes[1:1+frame.data_len]
+            message.data_bytes = frame.data_bytes[1:1 + frame.data_len]
 
         else:
             # sort FF and CF into their own lists
@@ -140,19 +143,19 @@ class CANProtocol(Protocol):
                 elif f.type == self.FRAME_TYPE_CF:
                     cf.append(f)
                 else:
-                    debug("Dropping frame in multi-frame response not marked as FF or CF")
+                    logger.warning('Dropping frame in multi-frame response not marked as FF or CF')
 
             # check that we captured only one first-frame
             if len(ff) > 1:
-                debug("Recieved multiple frames marked FF")
+                logger.warning('Received multiple frames marked FF')
                 return None
             elif len(ff) == 0:
-                debug("Never received frame marked FF")
+                logger.warning('Never received frame marked FF')
                 return None
 
             # check that there was at least one consecutive-frame
             if len(cf) == 0:
-                debug("Never received frame marked CF")
+                logger.warning('Never received frame marked CF')
                 return None
 
             # calculate proper sequence indices from the lower 4 bits given
@@ -175,7 +178,7 @@ class CANProtocol(Protocol):
             # check contiguity
             indices = [f.seq_index for f in cf]
             if not contiguous(indices, 1, len(cf)):
-                debug("Recieved multiline response with missing frames")
+                logger.warning('Received multiline response with missing frames')
                 return None
 
 
