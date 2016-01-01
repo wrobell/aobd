@@ -65,6 +65,10 @@ import operator
 import os.path
 import logging
 import platform
+import signal
+import sys
+from datetime import datetime, timezone
+from dateutil.parser import parse as time_parse
 
 import aobd
 
@@ -98,7 +102,54 @@ args = parser.parse_args()
 
 if args.verbose:
     logging.basicConfig(format=LOG_FMT)
-    logger.setLevel(logging.DEBUG)
+    logging.getLogger().setLevel(logging.DEBUG)
+
+
+class GPS:
+    def __init__(self, *, port=2947):
+        self._reader = None
+        self._writer = None
+        self._port = port
+        self._event = asyncio.Event()
+        self._pos = None
+
+
+    async def connect(self):
+        logger.info('connecting to gps device')
+        reader, writer = await asyncio.open_connection(port=self._port)
+        self._reader = reader
+        self._writer = writer
+        self._writer.write(b'?WATCH={"enable":true,"json":true}\n')
+
+        asyncio.ensure_future(self._read_data())
+        logger.info('gps connection started')
+
+
+    async def _read_data(self):
+        while True:
+            line = await self._reader.readline()
+            data = json.loads(line.decode())
+            if data.get('mode') == 3:
+                data['time'] = time_parse(data['time'])
+                diff = (datetime.now(timezone.utc) - data['time'])
+                if diff.total_seconds() < 1:
+                    self._pos = data
+                    self._event.set()
+                    self._event.clear()
+
+
+    def close(self):
+        self._writer.write(b'?WATCH={"enable":fase}\n')
+        self._writer.close()
+        self._writer = None
+        self._reader = None
+        logger.info('gps closed')
+
+
+    async def read(self):
+        await self._event.wait()
+        return self._pos
+
 
 
 async def obd_connect(dev_name, scheduler, dlog, commands):
@@ -126,25 +177,23 @@ async def obd_read(dev, commands):
 async def gps_connect(gps_port, scheduler, dlog, attr_names):
     logger.info('connecting to GPS device')
 
-    reader, writer = await asyncio.open_connection(port=gps_port)
-    writer.write('?WATCH={"enable":true,"json":true}\n'.encode())
-
-    logger.info('GPS connected')
+    dev = GPS(port=gps_port)
+    await dev.connect()
 
     for n in attr_names:
         dlog.add(n)
 
-    read = functools.partial(gps_read, reader)
+    read = functools.partial(gps_read, dev)
     workflow = data_split(attr_names, dlog)
 
     scheduler.add('gps', read, workflow)
-    return reader, writer
+    return dev
 
 
-async def gps_read(dev):
-    line = await dev.readline()
-    data = json.loads(line.decode())
-    return GPS_DATA_ATTR(data) if data.get('mode') == 3 else None
+async def gps_read(gps):
+    pos = await gps.read()
+    logger.debug('gps data: {}'.format(pos))
+    return GPS_DATA_ATTR(pos)
 
 
 @n23.coroutine
@@ -173,6 +222,7 @@ else:
 f = h5py.File(fn, 'w')
 
 loop = asyncio.get_event_loop()
+loop.add_signal_handler(signal.SIGTERM, sys.exit)
 dlog = n23.DLog(f, args.interval, n_chunk=60, debug=True)
 scheduler = n23.Scheduler(args.interval, timeout=0.9)
 scheduler.add_observer(dlog.notify)
@@ -192,9 +242,12 @@ finally:
     if obd_dev is not None:
         obd_dev.close()
     if gps_dev is not None:
-        gps_dev[1].close() # (reader, writer) pair
+        gps_dev.close()
+
     scheduler.close()
     dlog.close()
     f.close()
+
+    loop.remove_signal_handler(signal.SIGTERM)
 
 # vim: sw=4:et:ai
