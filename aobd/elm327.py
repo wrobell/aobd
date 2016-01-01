@@ -108,7 +108,9 @@ class ELM327:
 
     async def connect(self):
         # ---------------------------- ATZ (reset) ----------------------------
-        r = await self._send(b'ATZ') # wait 1 second for ELM to initialize
+        # reset device, read the response (if any) and try to detect
+        # version of the device
+        r = await self._send(b'ATZ')
         self._version = self._parse_version(r)
         if self._version:
             logger.info('version detected: {}'.format(self._version))
