@@ -129,6 +129,8 @@ class GPS:
         while True:
             line = await self._reader.readline()
             data = json.loads(line.decode())
+            logger.debug('gps data: {}'.format(data))
+
             if data.get('mode') == 3:
                 data['time'] = time_parse(data['time'])
                 diff = (datetime.now(timezone.utc) - data['time'])
@@ -192,7 +194,6 @@ async def gps_connect(gps_port, scheduler, dlog, attr_names):
 
 async def gps_read(gps):
     pos = await gps.read()
-    logger.debug('gps data: {}'.format(pos))
     return GPS_DATA_ATTR(pos)
 
 
