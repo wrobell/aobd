@@ -121,7 +121,7 @@ class GPS:
         self._writer = writer
         self._writer.write(b'?WATCH={"enable":true,"json":true}\n')
 
-        asyncio.ensure_future(self._read_data())
+        self._future = asyncio.ensure_future(self._read_data())
         logger.info('gps connection started')
 
 
@@ -129,19 +129,31 @@ class GPS:
         while True:
             line = await self._reader.readline()
             data = json.loads(line.decode())
-            logger.debug('gps data: {}'.format(data))
 
-            if data.get('mode') == 3:
+            if __debug__:
+                logger.debug('gps data: {}'.format(data))
+
+            if data.get('mode') == 3 and data.get('time'):
                 data['time'] = time_parse(data['time'])
-                diff = (datetime.now(timezone.utc) - data['time'])
-                if diff.total_seconds() < 1:
+                now = datetime.now(timezone.utc)
+                if (now - data['time']).total_seconds() < 1:
+
+                    if __debug__:
+                        logger.debug('position accepted')
+
                     self._pos = data
                     self._event.set()
                     self._event.clear()
+                elif __debug__:
+                    logger.debug(
+                        'position rejected due to time difference: {} vs {}'
+                        .format(now, data['time'])
+                    )
 
 
     def close(self):
-        self._writer.write(b'?WATCH={"enable":fase}\n')
+        self._future.cancel()
+        self._writer.write(b'?WATCH={"enable":false}\n')
         self._writer.close()
         self._writer = None
         self._reader = None
@@ -149,6 +161,8 @@ class GPS:
 
 
     async def read(self):
+        if __debug__:
+            logger.debug('acquire position')
         await self._event.wait()
         return self._pos
 
